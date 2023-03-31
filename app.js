@@ -1,6 +1,6 @@
 global.__dir = {
   controllers: __dirname + "/app/controllers",
-  routes: __dirname + "/app/routes",
+  routers: __dirname + "/app/routers",
   libs: __dirname + "/app/libs",
 };
 
@@ -10,6 +10,7 @@ const Cors = require("cors");
 const BodyParser = require("body-parser");
 
 const { dataBase } = require(__dir.libs + "/dataBase");
+const apiRouter = require(__dir.routers + "/api");
 
 const app = Express();
 const PORT = process.env.PORT || 8080;
@@ -18,6 +19,8 @@ app.use(BodyParser.json({ extended: true }));
 app.use(BodyParser.urlencoded({ extended: true }));
 app.use(Cors());
 app.use(Express.json());
+
+app.use("/api", apiRouter);
 
 const start = async () => {
   try {
