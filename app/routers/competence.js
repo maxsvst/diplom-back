@@ -3,7 +3,7 @@ const competenceController = require(__dir.controllers + "/competence");
 
 const router = new Router();
 
-router.post("/add", (req, res) => {
+router.post("/addCompetence", (req, res) => {
   const {
     competenceType,
     competenceCode,
@@ -23,13 +23,13 @@ router.post("/add", (req, res) => {
   res.send({ isAdded: true });
 });
 
-router.get("/get", async (req, res) => {
+router.get("/getCompetence", async (req, res) => {
   const result = await competenceController.getCompetence({ id: req.query.id });
 
   res.send(result);
 });
 
-router.delete("/delete", async (req, res) => {
+router.delete("/deleteCompetence", async (req, res) => {
   const { id } = req.query;
   await competenceController.deleteCompetence({
     id,
@@ -38,7 +38,7 @@ router.delete("/delete", async (req, res) => {
   res.send({ isDeleted: true });
 });
 
-router.post("/update", async (req, res) => {
+router.put("/updateCompetence", async (req, res) => {
   const {
     id,
     competenceType,
