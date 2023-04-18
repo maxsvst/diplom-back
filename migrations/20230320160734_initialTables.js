@@ -1,9 +1,9 @@
 exports.up = async function (knex) {
-  await knex.schema.createTable("Teacher", function (table) {
+  await knex.schema.createTable("Teacher", function (table) { //todo: нужен ли тут email, password fillname .unique()?
     table.increments("id").primary();
-    table.string("fullName").unique().notNullable(); // Делать ли уникальным
-    table.string("email").unique().notNullable(); // Нужен ли здесь имейл и пароль
-    table.string("password").notNullable(); // Нужен ли здесь имейл и пароль
+    table.string("fullName").unique().notNullable(); 
+    table.string("email").unique().notNullable(); 
+    table.string("password").notNullable(); 
     table.string("rank").notNullable();
     table.enu("position", [
       "Ассистент",
@@ -14,26 +14,30 @@ exports.up = async function (knex) {
     ]);
   });
 
-  await knex.schema.createTable("Discipline", function (table) {
+  await knex.schema.createTable("Discipline", function (table) { //todo: short/fullName .unique()?
     table.increments("id").primary();
-    table.string("fullName").notNullable(); // Уникально ли название дисциплины
-    table.string("shortName").notNullable(); // Уникально ли название дисциплины
-    table.string("code").notNullable().unique();
+    table.string("fullName").notNullable(); 
+    table.string("shortName").notNullable(); 
+    table.string("code").notNullable();
     table.string("cathedra").notNullable();
     table.string("studyField").notNullable();
   });
 
   await knex.schema.createTable("Discipline_Teacher", function (table) {
-    table.integer("teacherId").primary();
-    table.integer("disciplineId").primary();
+    table.integer("teacherId").notNullable();
+    table.integer("disciplineId").notNullable();
 
     table.foreign("teacherId")
         .references("id")
-        .inTable("Teacher"); // Каскадное даление и добавление
+        .inTable("Teacher")
+        .onUpdate("CASCADE")
+        .onDelete("CASCADE");
 
     table.foreign("disciplineId")
         .references("id")
-        .inTable("Discipline"); // Каскадное даление и добавление
+        .inTable("Discipline")
+        .onUpdate("CASCADE")
+        .onDelete("CASCADE");
   });
 
   await knex.schema.createTable("ExamQuestions", function (table) {
@@ -43,7 +47,9 @@ exports.up = async function (knex) {
 
     table.foreign("disciplineId")
         .references("id")
-        .inTable("Discipline");
+        .inTable("Discipline")
+        .onUpdate("CASCADE")
+        .onDelete("CASCADE");
   });
 
   await knex.schema.createTable("Lections", function (table) {
@@ -53,25 +59,31 @@ exports.up = async function (knex) {
 
     table.foreign("disciplineId")
         .references("id")
-        .inTable("Discipline"); // Каскадное даление и добавление
+        .inTable("Discipline")
+        .onUpdate("CASCADE")
+        .onDelete("CASCADE");
   });
 
-  await knex.schema.createTable("Rpd", function (table) {
+  await knex.schema.createTable("Rpd", function (table) { //todo: добавить поля
     table.increments("id").primary();
     table.integer("year").notNullable();
   });
 
   await knex.schema.createTable("Rpd_Lections", function (table) {
-    table.integer("rpdId").primary();
-    table.integer("lectionsId").primary();
+    table.integer("rpdId").notNullable();
+    table.integer("lectionsId").notNullable();
 
     table.foreign("rpdId")
         .references("id")
-            .inTable("Rpd"); // Каскадное даление и добавление
+        .inTable("Rpd")
+        .onUpdate("CASCADE")
+        .onDelete("CASCADE");
 
     table.foreign("lectionsId")
         .references("id")
-        .inTable("Lections"); // Каскадное даление и добавление
+        .inTable("Lections")
+        .onUpdate("CASCADE")
+        .onDelete("CASCADE");
   });
 
   await knex.schema.createTable("PracticalClass", function (table) {
@@ -81,20 +93,26 @@ exports.up = async function (knex) {
 
     table.foreign("disciplineId")
         .references("id")
-        .inTable("Discipline"); // Каскадное даление и добавление
+        .inTable("Discipline")
+        .onUpdate("CASCADE")
+        .onDelete("CASCADE");
   });
 
   await knex.schema.createTable("Rpd_PracticalClass", function (table) {
-    table.integer("rpdId").primary();
-    table.integer("practicalClassId").primary();
+    table.integer("rpdId").notNullable();
+    table.integer("practicalClassId").notNullable();
 
     table.foreign("rpdId")
         .references("id")
-        .inTable("Rpd"); // Каскадное даление и добавление
+        .inTable("Rpd")
+        .onUpdate("CASCADE")
+        .onDelete("CASCADE");
 
     table.foreign("practicalClassId")
       .references("practicalClassId")
-      .inTable("PracticalClass"); // Каскадное даление и добавление
+      .inTable("PracticalClass")
+      .onUpdate("CASCADE")
+      .onDelete("CASCADE");
   });
 
   await knex.schema.createTable("LaboratoryClass", function (table) {
@@ -104,21 +122,27 @@ exports.up = async function (knex) {
 
     table.foreign("disciplineId")
         .references("id")
-        .inTable("Discipline"); // Каскадное даление и добавление
+        .inTable("Discipline")
+        .onUpdate("CASCADE")
+        .onDelete("CASCADE");
   });
 
   await knex.schema.createTable("Rpd_LaboratoryClass", function (table) {
-    table.integer("rpdId").primary();
-    table.integer("laboratoryClassId").primary();
+    table.integer("rpdId").notNullable();
+    table.integer("laboratoryClassId").notNullable();
 
     table.foreign("rpdId")
         .references("id")
-        .inTable("Rpd"); // Каскадное даление и добавление
+        .inTable("Rpd")
+        .onUpdate("CASCADE")
+        .onDelete("CASCADE");
 
     table
       .foreign("laboratoryClassId")
       .references("laboratoryClassId")
-      .inTable("LaboratoryClass"); // Каскадное даление и добавление
+      .inTable("LaboratoryClass")
+      .onUpdate("CASCADE")
+      .onDelete("CASCADE");
   });
 
   await knex.schema.createTable("Topic", function (table) {
@@ -126,20 +150,24 @@ exports.up = async function (knex) {
     table.string("topicName").notNullable();
   });
 
-  await knex.schema.createTable("Rpd_Topic", function (table) {
-    table.integer("rpdId").primary();
-    table.integer("topicId").primary();
+  await knex.schema.createTable("Rpd_Topic", function (table) { //todo: добавить поля
+    table.integer("rpdId").notNullable();
+    table.integer("topicId").notNullable();
     table.integer("semester").notNullable();
     table.integer("totalHours").notNullable();
     table.integer("selfstudyHours").notNullable();
 
     table.foreign("rpdId")
         .references("id")
-        .inTable("Rpd"); // Каскадное даление и добавление
+        .inTable("Rpd")
+        .onUpdate("CASCADE")
+        .onDelete("CASCADE");
 
     table.foreign("topicId")
         .references("id")
-        .inTable("Topic"); // Каскадное даление и добавление
+        .inTable("Topic")
+        .onUpdate("CASCADE")
+        .onDelete("CASCADE");
   });
 
   await knex.schema.createTable("Competence", function (table) {
@@ -152,30 +180,22 @@ exports.up = async function (knex) {
   });
 
   await knex.schema.createTable("Rpd_Competence", function (table) {
-    table.integer("rpdId").primary();
-    table.integer("competenceId").primary();
+    table.integer("rpdId").notNullable();
+    table.integer("competenceId").notNullable();
 
     table.foreign("rpdId")
         .references("id")
-        .inTable("Rpd"); // Каскадное даление и добавление
+        .inTable("Rpd")
+        .onUpdate("CASCADE")
+        .onDelete("CASCADE");
 
     table.foreign("competenceId")
         .references("id")
-        .inTable("Competence"); // Каскадное даление и добавление
+        .inTable("Competence")
+        .onUpdate("CASCADE")
+        .onDelete("CASCADE");
   });
 
-  await knex.schema.createTable("Topic_Competence", function (table) {
-    table.integer("competenceId").primary();
-    table.integer("topicId").primary();
-
-    table.foreign("competenceId")
-        .references("id")
-        .inTable("Competence"); // Каскадное даление и добавление
-
-    table.foreign("topicId")
-        .references("id")
-        .inTable("Topic"); // Каскадное даление и добавление
-  });
 };
 
 exports.down = function (knex) {};
