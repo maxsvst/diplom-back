@@ -28,7 +28,7 @@ const deleteCompetence = (id) => {
 
 const updateCompetence = async (data) => {
   await dataBase("Competence").where({ id: data.id }).update(data);
-  return await dataBase("Competence").where({ id: data.id });
+  return await dataBase("Competence").where({ id: data.id }).first();
 };
 
 module.exports = {
