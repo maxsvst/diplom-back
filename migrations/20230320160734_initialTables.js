@@ -26,7 +26,7 @@ exports.up = async function (knex) {
   await knex.schema.createTable("Discipline_Teacher", function (table) {
     table.integer("teacherId").notNullable();
     table.integer("disciplineId").notNullable();
-
+    
     table.foreign("teacherId")
         .references("id")
         .inTable("Teacher")
@@ -55,7 +55,7 @@ exports.up = async function (knex) {
   await knex.schema.createTable("Lections", function (table) {
     table.increments("id").primary();
     table.integer("disciplineId").notNullable();
-    table.string("name").notNullable();
+    table.string("lectionName").notNullable();
 
     table.foreign("disciplineId")
         .references("id")

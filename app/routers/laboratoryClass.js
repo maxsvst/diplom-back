@@ -16,7 +16,7 @@ router.post("/addLaboratoryClass", (req, res) => {
 
 router.get("/getLaboratoryClass", async (req, res) => {
   const result = await laboratoryClassController.getLaboratoryClass({
-    laboratoryClassId: req.query.laboratoryClassId,
+    disciplineId: req.query.disciplineId,
   });
 
   res.send(result);

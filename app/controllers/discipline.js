@@ -18,6 +18,10 @@ const addDiscipline = async (
   return await dataBase("Discipline").insert(data);
 };
 
+const getAllDisciplines = () => {
+  return dataBase("Discipline").select("*");
+};
+
 const getDiscipline = (data) => {
   return dataBase("Discipline").select("*").where(data).first();
 };
@@ -59,6 +63,7 @@ const updateDisciplineTeacher = async (data) => {
 
 module.exports = {
   addDiscipline,
+  getAllDisciplines,
   getDiscipline,
   deleteDiscipline,
   updateDiscipline,

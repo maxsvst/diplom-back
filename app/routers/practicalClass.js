@@ -12,7 +12,7 @@ router.post("/addPracticalClass", (req, res) => {
 
 router.get("/getPracticalClass", async (req, res) => {
   const result = await practicalClassController.getPracticalClass({
-    practicalClassId: req.query.practicalClassId,
+    disciplineId: req.query.disciplineId,
   });
 
   res.send(result);

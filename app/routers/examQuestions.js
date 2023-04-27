@@ -5,7 +5,7 @@ const router = new Router();
 
 router.post("/addExamQuestions", (req, res) => {
   const { disciplineId, question } = req.body;
-  console.log(req.body);
+  
   examQuestionsController.addExamQuestions(disciplineId, question);
 
   res.send({ isAdded: true });
@@ -13,7 +13,7 @@ router.post("/addExamQuestions", (req, res) => {
 
 router.get("/getExamQuestions", async (req, res) => {
   const result = await examQuestionsController.getExamQuestions({
-    id: req.query.id,
+    disciplineId: req.query.disciplineId,
   });
 
   res.send(result);

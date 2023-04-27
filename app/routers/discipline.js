@@ -16,6 +16,12 @@ router.post("/addDiscipline", (req, res) => {
   res.send({ isAdded: true });
 });
 
+router.get("/getAllDisciplines", async (req, res) => {
+  const result = await disciplineController.getAllDisciplines();
+
+  res.send(result);
+});
+
 router.get("/getDiscipline", async (req, res) => {
   const result = await disciplineController.getDiscipline({ id: req.query.id });
 
