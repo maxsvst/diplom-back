@@ -1,7 +1,8 @@
 const { dataBase } = require(__dir.libs + "/dataBase");
 
-const addTopic = async (topicName) => {
+const addTopic = async (disciplineId, topicName) => {
   const data = {
+    disciplineId,
     topicName,
   };
 

@@ -3,7 +3,8 @@ const disciplineController = require(__dir.controllers + "/discipline");
 
 const router = new Router();
 
-router.post("/addDiscipline", (req, res) => {
+router.post("/addDiscipline", (err, req, res) => {
+  console.log(req.body);
   const { fullName, shortName, code, cathedra, studyField } = req.body;
   disciplineController.addDiscipline(
     fullName,
@@ -13,7 +14,7 @@ router.post("/addDiscipline", (req, res) => {
     studyField
   );
 
-  res.send({ isAdded: true });
+  res.status(200).send("Дисциплина добавлена");
 });
 
 router.get("/getAllDisciplines", async (req, res) => {
@@ -22,10 +23,17 @@ router.get("/getAllDisciplines", async (req, res) => {
   res.send(result);
 });
 
-router.get("/getDiscipline", async (req, res) => {
-  const result = await disciplineController.getDiscipline({ id: req.query.id });
+router.get("/getDiscipline", async (err, req, res) => {
+  const result = await disciplineController.getDiscipline({
+    fullName: req.query.fullName,
+  });
 
-  res.send(result);
+  if (err) {
+    console.error(err);
+    res.status(401).send("Дисциплина не найдена");
+  } else {
+    res.send(result);
+  }
 });
 
 router.delete("/deleteDiscipline", async (req, res) => {

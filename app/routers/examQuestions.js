@@ -4,16 +4,16 @@ const examQuestionsController = require(__dir.controllers + "/examQuestions");
 const router = new Router();
 
 router.post("/addExamQuestions", (req, res) => {
-  const { disciplineId, question } = req.body;
-  
-  examQuestionsController.addExamQuestions(disciplineId, question);
+  const { disciplineId, topicId, question } = req.body;
+
+  examQuestionsController.addExamQuestions(disciplineId, topicId, question);
 
   res.send({ isAdded: true });
 });
 
 router.get("/getExamQuestions", async (req, res) => {
   const result = await examQuestionsController.getExamQuestions({
-    disciplineId: req.query.disciplineId,
+    question: req.query.question,
   });
 
   res.send(result);

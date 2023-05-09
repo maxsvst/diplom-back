@@ -4,15 +4,19 @@ const practicalClassController = require(__dir.controllers + "/practicalClass");
 const router = new Router();
 
 router.post("/addPracticalClass", (req, res) => {
-  const { disciplineId, practicalClassName } = req.body;
-  practicalClassController.addPracticalClass(disciplineId, practicalClassName);
+  const { disciplineId, topicId, practicalClassName } = req.body;
+  practicalClassController.addPracticalClass(
+    disciplineId,
+    topicId,
+    practicalClassName
+  );
 
   res.send({ isAdded: true });
 });
 
 router.get("/getPracticalClass", async (req, res) => {
   const result = await practicalClassController.getPracticalClass({
-    disciplineId: req.query.disciplineId,
+    practicalClassName: req.query.practicalClassName,
   });
 
   res.send(result);

@@ -5,9 +5,10 @@ const laboratoryClassController = require(__dir.controllers +
 const router = new Router();
 
 router.post("/addLaboratoryClass", (req, res) => {
-  const { disciplineId, laboratoryClassName } = req.body;
+  const { disciplineId, topicId, laboratoryClassName } = req.body;
   laboratoryClassController.addLaboratoryClass(
     disciplineId,
+    topicId,
     laboratoryClassName
   );
 
@@ -16,7 +17,7 @@ router.post("/addLaboratoryClass", (req, res) => {
 
 router.get("/getLaboratoryClass", async (req, res) => {
   const result = await laboratoryClassController.getLaboratoryClass({
-    disciplineId: req.query.disciplineId,
+    laboratoryClassName: req.query.laboratoryClassName,
   });
 
   res.send(result);

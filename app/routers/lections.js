@@ -4,15 +4,15 @@ const lectionsController = require(__dir.controllers + "/lections");
 const router = new Router();
 
 router.post("/addLections", (req, res) => {
-  const { disciplineId, lectionName } = req.body;
-  lectionsController.addLections(disciplineId, lectionName);
+  const { disciplineId, topicId, lectionName } = req.body;
+  lectionsController.addLections(disciplineId, topicId, lectionName);
 
   res.send({ isAdded: true });
 });
 
 router.get("/getLections", async (req, res) => {
   const result = await lectionsController.getLections({
-    disciplineId: req.query.disciplineId,
+    lectionName: req.query.lectionName,
   });
 
   res.send(result);
