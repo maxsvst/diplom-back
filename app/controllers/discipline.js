@@ -61,6 +61,32 @@ const updateDisciplineTeacher = async (data) => {
     .first();
 };
 
+const addDisciplineCompetence = async (disciplineId, competenceId) => {
+  const data = {
+    disciplineId,
+    competenceId,
+  };
+
+  return await dataBase("Discipline_Competence").insert(data);
+};
+
+const getDisciplineCompetence = (data) => {
+  return dataBase("Discipline_Competence").select("*").where(data);
+};
+
+const deleteDisciplineCompetence = (id) => {
+  return dataBase("Discipline_Competence").del().where(id);
+};
+
+const updateDisciplineCompetence = async (data) => {
+  await dataBase("Discipline_Competence")
+    .where({ disciplineId: data.disciplineId })
+    .update(data);
+  return await dataBase("Discipline_Competence")
+    .where({ disciplineId: data.disciplineId })
+    .first();
+};
+
 module.exports = {
   addDiscipline,
   getAllDisciplines,
@@ -71,4 +97,8 @@ module.exports = {
   getDisciplineTeacher,
   deleteDisciplineTeacher,
   updateDisciplineTeacher,
+  addDisciplineCompetence,
+  getDisciplineCompetence,
+  deleteDisciplineCompetence,
+  updateDisciplineCompetence,
 };
