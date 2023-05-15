@@ -1,21 +1,77 @@
 const Router = require("express");
+const { checkSchema, validationResult } = require("express-validator");
+
+const { checkIsDisciplineFullnameUnique } = require("../helpers/utils");
 const disciplineController = require(__dir.controllers + "/discipline");
 
 const router = new Router();
 
-router.post("/addDiscipline", (err, req, res) => {
-  console.log(req.body);
-  const { fullName, shortName, code, cathedra, studyField } = req.body;
-  disciplineController.addDiscipline(
-    fullName,
-    shortName,
-    code,
-    cathedra,
-    studyField
-  );
+router.post(
+  "/addDiscipline",
+  checkSchema({
+    fullName: {
+      isString: true,
+      isLength: {
+        options: {
+          min: 1,
+        },
+      },
+      custom: {
+        options: async (fullName) => {
+          await checkIsDisciplineFullnameUnique(fullName);
+        },
+      },
+    },
+    shortName: {
+      isString: true,
+      isLength: {
+        options: {
+          min: 1,
+        },
+      },
+    },
+    code: {
+      isString: true,
+      isLength: {
+        options: {
+          min: 1,
+        },
+      },
+    },
+    cathedra: {
+      isString: true,
+      isLength: {
+        options: {
+          min: 1,
+        },
+      },
+    },
+    studyField: {
+      isString: true,
+      isLength: {
+        options: {
+          min: 1,
+        },
+      },
+    },
+  }),
+  (req, res) => {
+    const errors = validationResult(req);
+    console.log(errors);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
+    const { fullName, shortName, code, cathedra, studyField } = req.body;
+    disciplineController.addDiscipline(
+      fullName,
+      shortName,
+      code,
+      cathedra,
+      studyField
+    );
 
-  res.status(200).send("Дисциплина добавлена");
-});
+    res.status(200).send("Дисциплина добавлена");
+  }
+);
 
 router.get("/getAllDisciplines", async (req, res) => {
   const result = await disciplineController.getAllDisciplines();
@@ -23,17 +79,12 @@ router.get("/getAllDisciplines", async (req, res) => {
   res.send(result);
 });
 
-router.get("/getDiscipline", async (err, req, res) => {
+router.get("/getDiscipline", async (req, res) => {
   const result = await disciplineController.getDiscipline({
     fullName: req.query.fullName,
   });
 
-  if (err) {
-    console.error(err);
-    res.status(401).send("Дисциплина не найдена");
-  } else {
-    res.send(result);
-  }
+  res.send(result);
 });
 
 router.delete("/deleteDiscipline", async (req, res) => {
@@ -90,6 +141,68 @@ router.put("/updateDisciplineTeacher", async (req, res) => {
   const result = await disciplineController.updateDisciplineTeacher({
     disciplineId,
     teacherId,
+  });
+
+  res.send(result);
+});
+
+router.post(
+  "/addDisciplineCompetence",
+  checkSchema({
+    disciplineId: {
+      isNumeric: { min: 0 },
+    },
+    competenceId: {
+      isNumeric: { min: 0 },
+    },
+  }),
+  (req, res) => {
+    const errors = validationResult(req);
+    console.log(errors);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
+    const { disciplineId, competenceId } = req.body;
+    disciplineController.addDisciplineCompetence(disciplineId, competenceId);
+
+    res.send({ isAdded: true });
+  }
+);
+
+router.get(
+  "/getDisciplineCompetence",
+  checkSchema({
+    disciplineId: {
+      isNumeric: { min: 0 },
+    },
+  }),
+  async (req, res) => {
+    const errors = validationResult(req);
+    console.log(errors);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
+    const result = await disciplineController.getDisciplineCompetence({
+      disciplineId: req.query.disciplineId,
+    });
+
+    res.send(result);
+  }
+);
+
+router.delete("/deleteDisciplineCompetence", async (req, res) => {
+  const { laboratoryClassId } = req.query;
+  await disciplineController.deleteDisciplineCompetence({
+    // laboratoryClassId,
+  });
+
+  res.send({ isDeleted: true });
+});
+
+router.put("/updateDisciplineCompetence", async (req, res) => {
+  const { disciplineId, competenceId } = req.body;
+
+  const result = await disciplineController.updateDisciplineCompetence({
+    disciplineId,
+    competenceId,
   });
 
   res.send(result);
