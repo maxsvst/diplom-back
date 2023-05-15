@@ -10,6 +10,10 @@ const addLections = async (disciplineId, topicId, lectionName) => {
   return await dataBase("Lections").insert(data);
 };
 
+const getAllLections = (data) => {
+  return dataBase("Lections").select("*").where(data);
+};
+
 const getLections = (data) => {
   return dataBase("Lections").select("*").where(data).first();
 };
@@ -25,6 +29,7 @@ const updateLections = async (data) => {
 
 module.exports = {
   addLections,
+  getAllLections,
   getLections,
   deleteLections,
   updateLections,

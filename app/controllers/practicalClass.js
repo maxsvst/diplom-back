@@ -10,6 +10,10 @@ const addPracticalClass = async (disciplineId, topicId, practicalClassName) => {
   return await dataBase("PracticalClass").insert(data);
 };
 
+const getAllPracticalClasses = (data) => {
+  return dataBase("PracticalClass").select("*").where(data);
+};
+
 const getPracticalClass = (data) => {
   return dataBase("PracticalClass").select("*").where(data).first();
 };
@@ -29,6 +33,7 @@ const updatePracticalClass = async (data) => {
 
 module.exports = {
   addPracticalClass,
+  getAllPracticalClasses,
   getPracticalClass,
   deletePracticalClass,
   updatePracticalClass,

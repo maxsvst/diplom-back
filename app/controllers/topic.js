@@ -9,6 +9,10 @@ const addTopic = async (disciplineId, topicName) => {
   return await dataBase("Topic").insert(data);
 };
 
+const getAllTopics = (data) => {
+  return dataBase("Topic").select("*").where(data);
+};
+
 const getTopic = (data) => {
   return dataBase("Topic").select("*").where(data).first();
 };
@@ -24,6 +28,7 @@ const updateTopic = async (data) => {
 
 module.exports = {
   addTopic,
+  getAllTopics,
   getTopic,
   deleteTopic,
   updateTopic,
