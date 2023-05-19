@@ -90,14 +90,20 @@ router.post(
   }
 );
 
-router.get("/getCompetence", async (req, res) => {
-  const result = await competenceController.getCompetence({
+router.get("/getUniqueCompetence", async (req, res) => {
+  const result = await competenceController.getUniqueCompetence({
     competenceType: req.query.competenceType,
     competenceCode: req.query.competenceCode,
     competenceName: req.query.competenceName,
     indicatorCode: req.query.indicatorCode,
     indicatorName: req.query.indicatorName,
   });
+
+  res.send(result);
+});
+
+router.get("/getAllCompetences", async (req, res) => {
+  const result = await competenceController.getAllCompetences();
 
   res.send(result);
 });

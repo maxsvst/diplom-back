@@ -18,8 +18,12 @@ const addCompetence = async (
   return await dataBase("Competence").insert(data);
 };
 
-const getCompetence = (data) => {
+const getUniqueCompetence = (data) => {
   return dataBase("Competence").select("*").where(data).first();
+};
+
+const getAllCompetences = () => {
+  return dataBase("Competence").select("*");
 };
 
 const deleteCompetence = (id) => {
@@ -33,7 +37,8 @@ const updateCompetence = async (data) => {
 
 module.exports = {
   addCompetence,
-  getCompetence,
+  getUniqueCompetence,
+  getAllCompetences,
   deleteCompetence,
   updateCompetence,
 };
