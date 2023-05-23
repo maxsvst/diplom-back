@@ -45,9 +45,6 @@ router.get(
     disciplineId: {
       isNumeric: { min: 0 },
     },
-    topicId: {
-      isNumeric: { min: 0 },
-    },
   }),
   async (req, res) => {
     const errors = validationResult(req);
@@ -56,7 +53,6 @@ router.get(
       return res.status(400).json({ errors: errors.array() });
     const result = await lectionsController.getAllLections({
       disciplineId: req.query.disciplineId,
-      topicId: req.query.topicId,
     });
 
     res.send(result);
