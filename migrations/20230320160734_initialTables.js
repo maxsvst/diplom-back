@@ -100,16 +100,12 @@ exports.up = async function (knex) {
   await knex.schema.createTable("Rpd", function (table) {
     table.increments("id").primary();
     table.integer("disciplineId").notNullable();
-    table.integer("rpdSemester").notNullable();
-    table.integer("rpdTotalHours").notNullable();
+     table.integer("rpdTotalHours").notNullable();
     table.integer("rpdLectionHours").notNullable();
     table.integer("rpdPracticalHours").notNullable();
     table.integer("rpdLaboratoryHours").notNullable();
     table.integer("rpdSelfstudyHours").notNullable();
     table.integer("rpdAdditionalHours").notNullable();
-    table.integer("coursework").notNullable();
-    table.integer("test").notNullable();
-    table.integer("exam").notNullable();
     table.integer("year").notNullable();
 
     table
@@ -225,7 +221,6 @@ exports.up = async function (knex) {
   await knex.schema.createTable("Rpd_Topic", function (table) {
     table.integer("rpdId").notNullable();
     table.integer("topicId").notNullable();
-    table.integer("topicSemester").notNullable();
     table.integer("topicTotalHours").notNullable();
     table.integer("topicLectionHours").notNullable();
     table.integer("topicPracticalHours").notNullable();
