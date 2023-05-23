@@ -1,7 +1,23 @@
 const { dataBase } = require(__dir.libs + "/dataBase");
 
-const addRpd = async (year) => {
+const addRpd = async (
+  disciplineId,
+  rpdTotalHours,
+  rpdLectionHours,
+  rpdPracticalHours,
+  rpdLaboratoryHours,
+  rpdSelfstudyHours,
+  rpdAdditionalHours,
+  year
+) => {
   const data = {
+    disciplineId,
+    rpdTotalHours,
+    rpdLectionHours,
+    rpdPracticalHours,
+    rpdLaboratoryHours,
+    rpdSelfstudyHours,
+    rpdAdditionalHours,
     year,
   };
 
@@ -43,10 +59,15 @@ const updateRpdCompetence = async (data) => {
   return await dataBase("Rpd_Competence").where({ rpdId: data.rpdId }).first();
 };
 
-const addRpdLaboratoryClass = async (rpdId, laboratoryClassId) => {
+const addRpdLaboratoryClass = async (
+  rpdId,
+  laboratoryClassId,
+  laboratoryHours
+) => {
   const data = {
     rpdId,
     laboratoryClassId,
+    laboratoryHours,
   };
 
   return await dataBase("Rpd_LaboratoryClass").insert(data);
@@ -69,10 +90,15 @@ const updateRpdLaboratoryClass = async (data) => {
     .first();
 };
 
-const addRpdPracticalClass = async (rpdId, practicalClassId) => {
+const addRpdPracticalClass = async (
+  rpdId,
+  practicalClassId,
+  practicalHours
+) => {
   const data = {
     rpdId,
     practicalClassId,
+    practicalHours,
   };
 
   return await dataBase("Rpd_PracticalClass").insert(data);
@@ -95,10 +121,11 @@ const updateRpdPracticalClass = async (data) => {
     .first();
 };
 
-const addRpdLections = async (rpdId, lectionsId) => {
+const addRpdLections = async (rpdId, lectionId, lectionHours) => {
   const data = {
     rpdId,
-    lectionsId,
+    lectionId,
+    lectionHours,
   };
 
   return await dataBase("Rpd_Lections").insert(data);
@@ -120,16 +147,20 @@ const updateRpdLections = async (data) => {
 const addRpdTopic = async (
   rpdId,
   topicId,
-  semester,
-  totalHours,
-  selfstudyHours
+  topicTotalHours,
+  topicLectionHours,
+  topicPracticalHours,
+  topicLaboratoryHours,
+  topicSelfstudyHours
 ) => {
   const data = {
     rpdId,
     topicId,
-    semester,
-    totalHours,
-    selfstudyHours,
+    topicTotalHours,
+    topicLectionHours,
+    topicPracticalHours,
+    topicLaboratoryHours,
+    topicSelfstudyHours,
   };
 
   return await dataBase("Rpd_Topic").insert(data);

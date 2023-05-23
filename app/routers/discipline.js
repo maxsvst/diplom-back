@@ -1,7 +1,10 @@
 const Router = require("express");
 const { checkSchema, validationResult } = require("express-validator");
 
-const { checkIsDisciplineFullnameUnique } = require("../helpers/utils");
+const {
+  checkIsDisciplineFullnameUnique,
+  checkIsDisciplineCompetenceUnique,
+} = require("../helpers/utils");
 const disciplineController = require(__dir.controllers + "/discipline");
 
 const router = new Router();
@@ -79,13 +82,30 @@ router.get("/getAllDisciplines", async (req, res) => {
   res.send(result);
 });
 
-router.get("/getDiscipline", async (req, res) => {
-  const result = await disciplineController.getDiscipline({
-    fullName: req.query.fullName,
-  });
+router.get(
+  "/getDiscipline",
+  checkSchema({
+    fullName: {
+      isString: true,
+      isLength: {
+        options: {
+          min: 1,
+        },
+      },
+    },
+  }),
+  async (req, res) => {
+    const errors = validationResult(req);
+    console.log(errors);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
+    const result = await disciplineController.getDiscipline({
+      fullName: req.query.fullName,
+    });
 
-  res.send(result);
-});
+    res.send(result);
+  }
+);
 
 router.delete("/deleteDiscipline", async (req, res) => {
   const { id } = req.query;
@@ -151,6 +171,12 @@ router.post(
   checkSchema({
     disciplineId: {
       isNumeric: { min: 0 },
+      custom: {
+        options: async (disciplineId, request) => {
+          (competenceId = request.req.body.competenceId),
+            await checkIsDisciplineCompetenceUnique(disciplineId, competenceId);
+        },
+      },
     },
     competenceId: {
       isNumeric: { min: 0 },

@@ -88,6 +88,250 @@ const checkIsCompetenceCodeUnique = async (
   }
 };
 
+const checkIsRpdUnique = async (
+  disciplineId,
+  rpdTotalHours,
+  rpdLectionHours,
+  rpdPracticalHours,
+  rpdLaboratoryHours,
+  rpdSelfstudyHours,
+  rpdAdditionalHours,
+  year
+) => {
+  const item = await dataBase("Rpd")
+    .select("*")
+    .where({
+      disciplineId: disciplineId,
+      rpdTotalHours: rpdTotalHours,
+      rpdLectionHours: rpdLectionHours,
+      rpdPracticalHours: rpdPracticalHours,
+      rpdLaboratoryHours: rpdLaboratoryHours,
+      rpdSelfstudyHours: rpdSelfstudyHours,
+      rpdAdditionalHours: rpdAdditionalHours,
+      year,
+    })
+    .first();
+  if (item) {
+    return Promise.reject("Такая РПД уже существует");
+  }
+};
+
+const checkIsRpdCompetenceUnique = async (rpdId, competenceId) => {
+  const rpdIdExist = await dataBase("Rpd")
+    .select("*")
+    .where({
+      id: rpdId,
+    })
+    .first();
+
+  const competenceIdExist = await dataBase("Competence")
+    .select("*")
+    .where({
+      id: competenceId,
+    })
+    .first();
+
+  const item = await dataBase("Rpd_Competence")
+    .select("*")
+    .where({
+      rpdId,
+      competenceId,
+    })
+    .first();
+
+  if (!rpdIdExist) {
+    return Promise.reject("Такой РПД не существует");
+  } else if (!competenceIdExist) {
+    return Promise.reject("Такой компетенции не существует");
+  } else if (item) {
+    return Promise.reject("Такая запись в Rpd_Competence уже существует");
+  }
+};
+
+const checkIsRpdLaboratoryClassUnique = async (
+  rpdId,
+  laboratoryClassId,
+  laboratoryHours
+) => {
+  const rpdIdExist = await dataBase("Rpd")
+    .select("*")
+    .where({
+      id: rpdId,
+    })
+    .first();
+
+  const laboratoryClassIdExist = await dataBase("LaboratoryClass")
+    .select("*")
+    .where({
+      laboratoryClassId,
+    })
+    .first();
+
+  const item = await dataBase("Rpd_LaboratoryClass")
+    .select("*")
+    .where({
+      rpdId,
+      laboratoryClassId,
+      laboratoryHours,
+    })
+    .first();
+  if (!rpdIdExist) {
+    return Promise.reject("Такой РПД не существует");
+  } else if (!laboratoryClassIdExist) {
+    return Promise.reject("Такого ЛЗ не существует");
+  } else if (item) {
+    return Promise.reject("Такая запись в Rpd_LaboratoryClass уже существует");
+  }
+};
+
+const checkIsRpdPracticalClassUnique = async (
+  rpdId,
+  practicalClassId,
+  practicalHours
+) => {
+  const rpdIdExist = await dataBase("Rpd")
+    .select("*")
+    .where({
+      id: rpdId,
+    })
+    .first();
+
+  const practicalClassIdExist = await dataBase("PracticalClass")
+    .select("*")
+    .where({
+      practicalClassId,
+    })
+    .first();
+
+  const item = await dataBase("Rpd_PracticalClass")
+    .select("*")
+    .where({
+      rpdId,
+      practicalClassId,
+      practicalHours,
+    })
+    .first();
+  if (!rpdIdExist) {
+    return Promise.reject("Такой РПД не существует");
+  } else if (!practicalClassIdExist) {
+    return Promise.reject("Такого ПЗ не существует");
+  } else if (item) {
+    return Promise.reject("Такая запись в Rpd_PracticalClass уже существует");
+  }
+};
+
+const checkIsRpdLectionsUnique = async (rpdId, lectionId, lectionHours) => {
+  const rpdIdExist = await dataBase("Rpd")
+    .select("*")
+    .where({
+      id: rpdId,
+    })
+    .first();
+
+  const lectionIdExist = await dataBase("Lections")
+    .select("*")
+    .where({
+      id: lectionId,
+    })
+    .first();
+
+  const item = await dataBase("Rpd_Lections")
+    .select("*")
+    .where({
+      rpdId,
+      lectionId,
+      lectionHours,
+    })
+    .first();
+  if (!rpdIdExist) {
+    return Promise.reject("Такой РПД не существует");
+  } else if (!lectionIdExist) {
+    return Promise.reject("Такой лекции не существует");
+  } else if (item) {
+    return Promise.reject("Такая запись в Rpd_Lections уже существует");
+  }
+};
+
+const checkIsRpdTopicUnique = async (
+  rpdId,
+  topicId,
+  topicTotalHours,
+  topicLectionHours,
+  topicPracticalHours,
+  topicLaboratoryHours,
+  topicSelfstudyHours
+) => {
+  const rpdIdExist = await dataBase("Rpd")
+    .select("*")
+    .where({
+      id: rpdId,
+    })
+    .first();
+
+  const topicIdExist = await dataBase("Topic")
+    .select("*")
+    .where({
+      id: topicId,
+    })
+    .first();
+
+  const item = await dataBase("Rpd_Topic")
+    .select("*")
+    .where({
+      rpdId,
+      topicId,
+      topicTotalHours,
+      topicLectionHours,
+      topicPracticalHours,
+      topicLaboratoryHours,
+      topicSelfstudyHours,
+    })
+    .first();
+  if (!rpdIdExist) {
+    return Promise.reject("Такой РПД не существует");
+  } else if (!topicIdExist) {
+    return Promise.reject("Такой темы не существует");
+  } else if (item) {
+    return Promise.reject("Такая запись в Rpd_Topic уже существует");
+  }
+};
+
+const checkIsDisciplineCompetenceUnique = async (
+  disciplineId,
+  competenceId
+) => {
+  const disciplineIdExist = await dataBase("Discipline")
+    .select("*")
+    .where({
+      id: disciplineId,
+    })
+    .first();
+
+  const competenceIdExist = await dataBase("Competence")
+    .select("*")
+    .where({
+      id: competenceId,
+    })
+    .first();
+
+  const item = await dataBase("Discipline_Competence")
+    .select("*")
+    .where({
+      disciplineId,
+      competenceId,
+    })
+    .first();
+  if (!disciplineIdExist) {
+    return Promise.reject("Такой дисциплины не существует");
+  } else if (!competenceIdExist) {
+    return Promise.reject("Такой компетенции не существует");
+  } else if (item) {
+    return Promise.reject(
+      "Такая запись в Discipline_Competence уже существует"
+    );
+  }
+};
+
 module.exports = {
   checkIsDisciplineFullnameUnique,
   checkIsTopicInDisciplineExist,
@@ -96,4 +340,11 @@ module.exports = {
   checkIsLectionInTopicExist,
   checkIsExamQuestionInTopicExist,
   checkIsCompetenceCodeUnique,
+  checkIsRpdUnique,
+  checkIsRpdCompetenceUnique,
+  checkIsRpdLaboratoryClassUnique,
+  checkIsRpdPracticalClassUnique,
+  checkIsRpdLectionsUnique,
+  checkIsRpdTopicUnique,
+  checkIsDisciplineCompetenceUnique,
 };
