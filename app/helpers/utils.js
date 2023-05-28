@@ -98,6 +98,13 @@ const checkIsRpdUnique = async (
   rpdAdditionalHours,
   year
 ) => {
+  const disciplineIdExist = await dataBase("Discipline")
+    .select("*")
+    .where({
+      id: disciplineId,
+    })
+    .first();
+
   const item = await dataBase("Rpd")
     .select("*")
     .where({
@@ -111,7 +118,9 @@ const checkIsRpdUnique = async (
       year,
     })
     .first();
-  if (item) {
+  if (!disciplineIdExist) {
+    return Promise.reject("Такой дисциплины не существует");
+  } else if (item) {
     return Promise.reject("Такая РПД уже существует");
   }
 };

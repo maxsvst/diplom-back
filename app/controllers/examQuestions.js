@@ -14,6 +14,10 @@ const getExamQuestions = (data) => {
   return dataBase("ExamQuestions").select("*").where(data).first();
 };
 
+const getAllExamQuestions = (data) => {
+  return dataBase("ExamQuestions").select("*").where(data);
+};
+
 const deleteExamQuestions = (id) => {
   return dataBase("ExamQuestions").del().where(id);
 };
@@ -26,6 +30,7 @@ const updateExamQuestions = async (data) => {
 module.exports = {
   addExamQuestions,
   getExamQuestions,
+  getAllExamQuestions,
   deleteExamQuestions,
   updateExamQuestions,
 };

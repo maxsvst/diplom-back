@@ -108,6 +108,15 @@ router.get("/getAllCompetences", async (req, res) => {
   res.send(result);
 });
 
+router.get("/getCompetences", async (req, res) => {
+  const { id } = req.query;
+  const result = await competenceController.getCompetences({
+    id,
+  });
+
+  res.send(result);
+});
+
 router.delete("/deleteCompetence", async (req, res) => {
   const { id } = req.query;
   await competenceController.deleteCompetence({

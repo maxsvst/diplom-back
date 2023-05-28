@@ -107,6 +107,26 @@ router.get(
   }
 );
 
+router.get(
+  "/getDisciplineById",
+  checkSchema({
+    id: {
+      isNumeric: { min: 0 },
+    },
+  }),
+  async (req, res) => {
+    const errors = validationResult(req);
+    console.log(errors);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
+    const result = await disciplineController.getDiscipline({
+      id: req.query.id,
+    });
+
+    res.send(result);
+  }
+);
+
 router.delete("/deleteDiscipline", async (req, res) => {
   const { id } = req.query;
   await disciplineController.deleteDiscipline({

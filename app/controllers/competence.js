@@ -26,6 +26,10 @@ const getAllCompetences = () => {
   return dataBase("Competence").select("*");
 };
 
+const getCompetences = (data) => {
+  return dataBase("Competence").select("*").where(data);
+};
+
 const deleteCompetence = (id) => {
   return dataBase("Competence").del().where(id);
 };
@@ -39,6 +43,7 @@ module.exports = {
   addCompetence,
   getUniqueCompetence,
   getAllCompetences,
+  getCompetences,
   deleteCompetence,
   updateCompetence,
 };

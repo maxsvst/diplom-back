@@ -48,6 +48,14 @@ router.get("/getExamQuestions", async (req, res) => {
   res.send(result);
 });
 
+router.get("/getAllExamQuestions", async (req, res) => {
+  const result = await examQuestionsController.getAllExamQuestions({
+    disciplineId: req.query.disciplineId,
+  });
+
+  res.send(result);
+});
+
 router.delete("/deleteExamQuestions", async (req, res) => {
   const { id } = req.query;
   await examQuestionsController.deleteExamQuestions({

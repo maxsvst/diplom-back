@@ -95,13 +95,76 @@ router.post(
   }
 );
 
-router.get("/getRpd", async (req, res) => {
-  const result = await rpdController.getRpd({
-    id: req.query.id,
-  });
+router.get(
+  "/getRpd",
+  checkSchema({
+    id: {
+      isNumeric: { min: 0 },
+    },
+  }),
+  async (req, res) => {
+    const errors = validationResult(req);
+    console.log(errors);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
+    const result = await rpdController.getRpd({
+      id: req.query.id,
+    });
 
-  res.send(result);
-});
+    res.send(result);
+  }
+);
+
+router.get(
+  "/getUniqueRpd",
+  checkSchema({
+    disciplineId: {
+      isNumeric: { min: 0 },
+    },
+    rpdTotalHours: {
+      isNumeric: { min: 0 },
+    },
+    rpdLectionHours: {
+      isNumeric: { min: 0 },
+    },
+    rpdPracticalHours: {
+      isNumeric: { min: 0 },
+    },
+    rpdLaboratoryHours: {
+      isNumeric: { min: 0 },
+    },
+    rpdSelfstudyHours: {
+      isNumeric: { min: 0 },
+    },
+    rpdSelfstudyHours: {
+      isNumeric: { min: 0 },
+    },
+    rpdAdditionalHours: {
+      isNumeric: { min: 0 },
+    },
+    year: {
+      isNumeric: { min: 0 },
+    },
+  }),
+  async (req, res) => {
+    const errors = validationResult(req);
+    console.log(errors);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
+    const result = await rpdController.getRpd({
+      disciplineId: req.query.disciplineId,
+      rpdTotalHours: req.query.rpdTotalHours,
+      rpdLectionHours: req.query.rpdLectionHours,
+      rpdPracticalHours: req.query.rpdPracticalHours,
+      rpdLaboratoryHours: req.query.rpdLaboratoryHours,
+      rpdSelfstudyHours: req.query.rpdSelfstudyHours,
+      rpdAdditionalHours: req.query.rpdAdditionalHours,
+      year,
+    });
+
+    res.send(result);
+  }
+);
 
 router.delete("/deleteRpd", async (req, res) => {
   const { id } = req.query;
@@ -150,6 +213,14 @@ router.post(
     res.send({ isAdded: true });
   }
 );
+
+router.get("/getAllRpdCompetence", async (req, res) => {
+  const result = await rpdController.getAllRpdCompetence({
+    rpdId: req.query.rpdId,
+  });
+
+  res.send(result);
+});
 
 router.get("/getRpdCompetence", async (req, res) => {
   const result = await rpdController.getRpdCompetence({

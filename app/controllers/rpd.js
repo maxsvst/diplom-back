@@ -46,6 +46,10 @@ const addRpdCompetence = async (rpdId, competenceId) => {
   return await dataBase("Rpd_Competence").insert(data);
 };
 
+const getAllRpdCompetence = (data) => {
+  return dataBase("Rpd_Competence").select("*").where(data);
+};
+
 const getRpdCompetence = (data) => {
   return dataBase("Rpd_Competence").select("*").where(data).first();
 };
@@ -185,6 +189,7 @@ module.exports = {
   deleteRpd,
   updateRpd,
   addRpdCompetence,
+  getAllRpdCompetence,
   getRpdCompetence,
   deleteRpdCompetence,
   updateRpdCompetence,
