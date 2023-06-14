@@ -7,11 +7,42 @@ const axios = require("axios");
 
 const PizZip = require("pizzip");
 const Docxtemplater = require("docxtemplater");
+const expressionParser = require("docxtemplater/expressions.js");
 const fs = require("fs");
 const path = require("path");
 
+expressionParser.filters.loop = function (input, ...keys) {
+  const result = input.reduce(function (result, item) {
+    (item[keys[0]] || []).forEach(function (subitem) {
+      result.push({ ...item, ...subitem });
+    });
+    return result;
+  }, []);
+  if (keys.length === 1) {
+    return result;
+  }
+  keys.shift();
+  return expressionParser.filters.loop(result, ...keys);
+};
+
+expressionParser.filters.where = function (input, query) {
+  return input.filter(function (item) {
+    return expressions.compile(query)(item);
+  });
+};
+
+function replaceErrors(key, value) {
+  if (value instanceof Error) {
+    return Object.getOwnPropertyNames(value).reduce(function (error, key) {
+      error[key] = value[key];
+      return error;
+    }, {});
+  }
+  return value;
+}
+
 function errorHandler(error) {
-  console.log(JSON.stringify({ error: error }, replaceErrxors));
+  console.log(JSON.stringify({ error: error }, replaceErrors));
   if (error.properties && error.properties.errors instanceof Array) {
     const errorMessages = error.properties.errors
       .map(function (error) {
@@ -26,11 +57,11 @@ function errorHandler(error) {
 const createDocument = (data) => {
   for (let i = 0; i < data.length; i++) {
     const resData = data[i];
-    const content = fs.readFileSync(path.resolve("template.docx"), "binary");
+    const content = fs.readFileSync(path.resolve("template.docx"), "binary"); //
     const zip = new PizZip(content);
     let doc;
     try {
-      doc = new Docxtemplater(zip);
+      doc = new Docxtemplater(zip, { parser: expressionParser });
     } catch (error) {
       errorHandler(error);
     }
@@ -83,6 +114,16 @@ router.get(
       },
     });
 
+    const topicHours = await axios.get(
+      "http://localhost:8000/rpd/getAllRpdTopicByRpdId",
+      {
+        // МАССИВ ЧАСОВ К ТЕМАМ
+        params: {
+          rpdId: rpd.data.id,
+        },
+      }
+    );
+
     const laboratoryClasses = await axios.get(
       // МАССИВ ЛЗ
       "http://localhost:8000/laboratoryClass/getAllLaboratoryClasses",
@@ -123,8 +164,8 @@ router.get(
       }
     );
 
-    const competenceArray = await Promise.all(
-      // [[{}],[{}]] - flat(Infinity) - МАССИВ КОМПЕТЕНЦИЙ
+    const competences = await Promise.all(
+      // МАССИВ КОМПЕТЕНЦИЙ
       competenceIds.data.map(async (item) => {
         const response = await axios.get(
           "http://localhost:8000/competence/getCompetences",
@@ -147,6 +188,21 @@ router.get(
       }
     );
 
+    const tableTopics = topics.data
+      .map((item) => ({ id: item.id, name: item.topicName }))
+      .flat(Infinity);
+
+    const firstTableHours = topicHours.data
+      .map((item) => ({
+        topicId: item.topicId,
+        totalHours: item.topicTotalHours,
+        lectionHours: item.topicLectionHours,
+        practicalHours: item.topicPracticalHours,
+        laboratoryHours: item.topicLaboratoryHours,
+        selfstudyHours: item.topicSelfstudyHours,
+      }))
+      .flat(Infinity);
+
     const docData = [
       {
         title: "РПД",
@@ -158,20 +214,89 @@ router.get(
         disciplineLowercaseName:
           discipline.data.fullName[0].toUpperCase() +
           discipline.data.fullName.slice(1).toLowerCase(),
-        // competenceType1: "Общепрофессиональные компетенции",
-        // competenceType2: "профессиональный",
-        // competenceCode1: "ОПК-2",
-        // competenceCode2: "ПК-8.",
-        // competenceName1:
-        //   "Способен понимать принципы работы современных информационных технологий и программных средств, в том числе отечественного производства, и использовать их при решении задач профессиональной деятельности",
-        // competenceName2:
-        //   "Способен осуществлять ведение баз данных в информационных системах, обеспечивать их безопасность и целостность",
-        // indicatorCode1: "ОПК-2.1. Знать: ",
-        // indicatorCode2: "ПК-8.1. Знать:",
-        // indicatorName1:
-        //   "современные информационно- коммуникационные и интеллектуальные технологии, инструментальные среды, программно-технические платформы для решения профессиональных задач.",
-        // indicatorName2:
-        //   "методы реляционной алгебры и языки программирования, ориентированными на обработку данных для построения, сопровождения и модификации баз данных ",
+        competences: competences.map((item) => item).flat(Infinity),
+        firstTable: tableTopics
+          .flatMap((topic) =>
+            firstTableHours.flatMap((item, index) => {
+              if (topic.id === item.topicId) {
+                return {
+                  index: index + 1,
+                  name: topic.name,
+                  totalHours: item.totalHours,
+                  lectionHours: item.lectionHours,
+                  practicalHours: item.practicalHours,
+                  laboratoryHours: item.laboratoryHours,
+                  selfstudyHours: item.selfstudyHours,
+                };
+              } else return null;
+            })
+          )
+          .filter((item) => item !== null),
+        secondTable: tableTopics.map((topic, index) => {
+          const labs = laboratoryClasses.data
+            .filter((item) => item.topicId === topic.id)
+            .reduce(
+              (acc, obj, index, arrayRef) =>
+                arrayRef.length === index + 1
+                  ? acc + obj.laboratoryClassName
+                  : acc + obj.laboratoryClassName + ", ",
+              ""
+            );
+          const practice = practicalClasses.data
+            .filter((item) => item.topicId === topic.id)
+            .reduce(
+              (acc, obj, index, arrayRef) =>
+                arrayRef.length === index + 1
+                  ? acc + obj.practicalClassName
+                  : acc + obj.practicalClassName + ", ",
+              ""
+            );
+          const lects = lections.data
+            .filter((item) => item.topicId === topic.id)
+            .reduce(
+              (acc, obj, index, arrayRef) =>
+                arrayRef.length === index + 1
+                  ? acc + obj.lectionName
+                  : acc + obj.lectionName + ", ",
+              ""
+            );
+
+          return {
+            id: index + 1,
+            name: topic.name,
+            laboratoryClasses: labs,
+            practicalClasses: practice,
+            lections: lects,
+          };
+        }),
+        thirdTable: tableTopics.map((topic, index) => {
+          const filteredQuestions = examQuestions.data.filter(
+            (question) => topic.id === question.topicId
+          );
+          return {
+            topicIndex: index + 1,
+            name: topic.name,
+            question: filteredQuestions.map((item, index) => {
+              return {
+                questionIndex: index + 1,
+                questionName: item.question,
+              };
+            }),
+          };
+        }),
+        allQuestions: examQuestions.data.map((item, index) => {
+          return { id: index + 1, questionName: item.question };
+        }),
+        topics: topics.data
+          .map((item) => ({ id: item.id, name: item.topicName }))
+          .flat(Infinity),
+        laboratoryClasses: laboratoryClasses.data
+          .map((item) => item)
+          .flat(Infinity),
+        practicalClasses: practicalClasses.data
+          .map((item) => item)
+          .flat(Infinity),
+        lections: lections.data.map((item) => item).flat(Infinity),
         rpdTotalHours: rpd.data.rpdTotalHours,
         rpdLectionHours: rpd.data.rpdLectionHours,
         rpdPracticalHours: rpd.data.rpdPracticalHours,
@@ -180,6 +305,30 @@ router.get(
         rpdAdditionalHours: rpd.data.rpdAdditionalHours,
       },
     ];
+
+    // console.log(
+    //   testTopics
+    //     .map((topic, index) => {
+    //       const filteredQuestions = testQuestions.filter(
+    //         (question) => topic.id === question.topicId
+    //       );
+    //       return {
+    //         topicId: topic.id,
+    //         topicIndex: index + 1,
+    //         name: topic.name,
+    //         question: filteredQuestions.map((item, index) => {
+    //           return {
+    //             questionIndex: index + 1,
+    //             questionTopicId: item.topicId,
+    //             questionName: item.question,
+    //           };
+    //         }),
+    //       };
+    //     })
+    //     .map((item) => item.question)
+    // );
+
+    // res.send({ f: true });
     createDocument(docData);
     res.sendFile(`${docData.map((item) => item.title)}.docx`, {
       root: "output",
