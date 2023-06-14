@@ -523,6 +523,14 @@ router.get("/getRpdTopic", async (req, res) => {
   res.send(result);
 });
 
+router.get("/getAllRpdTopicByRpdId", async (req, res) => {
+  const result = await rpdController.getAllRpdTopicByRpdId({
+    rpdId: req.query.rpdId,
+  });
+
+  res.send(result);
+});
+
 router.delete("/deleteRpdTopic", async (req, res) => {
   const { rpdId } = req.query;
   await rpdController.deleteRpdTopic({

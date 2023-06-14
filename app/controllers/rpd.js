@@ -174,6 +174,10 @@ const getRpdTopic = (data) => {
   return dataBase("Rpd_Topic").select("*").where(data).first();
 };
 
+const getAllRpdTopicByRpdId = (data) => {
+  return dataBase("Rpd_Topic").select("*").where(data);
+};
+
 const deleteRpdTopic = (id) => {
   return dataBase("Rpd_Topic").del().where(id);
 };
@@ -207,6 +211,7 @@ module.exports = {
   updateRpdLections,
   addRpdTopic,
   getRpdTopic,
+  getAllRpdTopicByRpdId,
   deleteRpdTopic,
   updateRpdTopic,
 };
