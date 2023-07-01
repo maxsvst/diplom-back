@@ -94,12 +94,12 @@ router.delete("/deleteLections", async (req, res) => {
 });
 
 router.put("/updateLections", async (req, res) => {
-  const { id, disciplineId, name } = req.body;
+  const { id, disciplineId, lectionName } = req.body;
 
   const result = await lectionsController.updateLections({
     id,
     disciplineId,
-    name,
+    lectionName,
   });
 
   res.send(result);

@@ -235,9 +235,9 @@ router.get(
 );
 
 router.delete("/deleteDisciplineCompetence", async (req, res) => {
-  const { laboratoryClassId } = req.query;
+  const { disciplineId } = req.query;
   await disciplineController.deleteDisciplineCompetence({
-    // laboratoryClassId,
+    disciplineId,
   });
 
   res.send({ isDeleted: true });

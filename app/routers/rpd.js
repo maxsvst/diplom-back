@@ -541,14 +541,24 @@ router.delete("/deleteRpdTopic", async (req, res) => {
 });
 
 router.put("/updateRpdTopic", async (req, res) => {
-  const { rpdId, topicId, semester, totalHours, selfstudyHours } = req.body;
+  const {
+    rpdId,
+    topicId,
+    topicTotalHours,
+    topicLectionHours,
+    topicPracticalHours,
+    topicLaboratoryHours,
+    topicSelfstudyHours,
+  } = req.body;
 
   const result = await rpdController.updateRpdTopic({
     rpdId,
     topicId,
-    semester,
-    totalHours,
-    selfstudyHours,
+    topicTotalHours,
+    topicLectionHours,
+    topicPracticalHours,
+    topicLaboratoryHours,
+    topicSelfstudyHours,
   });
 
   res.send(result);

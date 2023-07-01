@@ -306,29 +306,6 @@ router.get(
       },
     ];
 
-    // console.log(
-    //   testTopics
-    //     .map((topic, index) => {
-    //       const filteredQuestions = testQuestions.filter(
-    //         (question) => topic.id === question.topicId
-    //       );
-    //       return {
-    //         topicId: topic.id,
-    //         topicIndex: index + 1,
-    //         name: topic.name,
-    //         question: filteredQuestions.map((item, index) => {
-    //           return {
-    //             questionIndex: index + 1,
-    //             questionTopicId: item.topicId,
-    //             questionName: item.question,
-    //           };
-    //         }),
-    //       };
-    //     })
-    //     .map((item) => item.question)
-    // );
-
-    // res.send({ f: true });
     createDocument(docData);
     res.sendFile(`${docData.map((item) => item.title)}.docx`, {
       root: "output",
