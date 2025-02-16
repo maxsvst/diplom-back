@@ -2,7 +2,7 @@ const dataBase = require("knex")({
   client: "pg",
   connection: {
     client: "db",
-    host: "localhost",
+    host: process.env.DB_HOST,
     user: "postgres",
     password: "root",
     database: "rpd",

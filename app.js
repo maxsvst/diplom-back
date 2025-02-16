@@ -44,7 +44,6 @@ app.use("/document", documentRouter);
 const start = async () => {
   try {
     app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
-    await dataBase.migrate.latest();
   } catch (e) {
     console.log("error", e);
   }
