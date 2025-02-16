@@ -3,6 +3,9 @@
 start:
 	docker-compose up --build
 
+start-prod:
+	docker-compose up --build -d
+
 stop:
 	docker-compose down
 
