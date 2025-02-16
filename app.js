@@ -25,9 +25,17 @@ const documentRouter = require(__dir.routers + "/createDocument");
 const app = Express();
 const PORT = process.env.PORT || 8080;
 
+const corsOptions = {
+  origin: ['https://diplom-front-one.vercel.app', 'http://localhost:3000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
 app.use(BodyParser.json({ extended: true }));
 app.use(BodyParser.urlencoded({ extended: true }));
-app.use(Cors());
+app.use(Cors(corsOptions));
 app.use(Express.json());
 
 app.use("/teacher", teacherRouter);
