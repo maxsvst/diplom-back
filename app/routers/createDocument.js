@@ -91,7 +91,7 @@ router.get(
     if (!errors.isEmpty())
       return res.status(400).json({ errors: errors.array() });
     const { id } = req.query;
-    const rpd = await axios.get(`${process.env.BACK_URL} + '/rpd/getRpd'`, {
+    const rpd = await axios.get(`${process.env.BACK_URL}/rpd/getRpd`, {
       params: {
         id,
       },
@@ -99,7 +99,7 @@ router.get(
 
     const discipline = await axios.get(
       // МАССИВ дисциплин
-      `${process.env.BACK_URL} + '/discipline/getDisciplineById'`,
+      `${process.env.BACK_URL}/discipline/getDisciplineById`,
       {
         params: {
           id: rpd.data.disciplineId,
@@ -107,7 +107,7 @@ router.get(
       }
     );
 
-    const topics = await axios.get(`${process.env.BACK_URL} + '/topic/getAllTopics'`, {
+    const topics = await axios.get(`${process.env.BACK_URL}/topic/getAllTopics`, {
       // МАССИВ ТЕМ
       params: {
         disciplineId: rpd.data.disciplineId,
@@ -115,7 +115,7 @@ router.get(
     });
 
     const topicHours = await axios.get(
-      `${process.env.BACK_URL} + '/rpd/getAllRpdTopicByRpdId'`,
+      `${process.env.BACK_URL}/rpd/getAllRpdTopicByRpdId`,
       {
         // МАССИВ ЧАСОВ К ТЕМАМ
         params: {
@@ -126,7 +126,7 @@ router.get(
 
     const laboratoryClasses = await axios.get(
       // МАССИВ ЛЗ
-      `${process.env.BACK_URL} + '/laboratoryClass/getAllLaboratoryClasses'`,
+      `${process.env.BACK_URL}/laboratoryClass/getAllLaboratoryClasses`,
       {
         params: {
           disciplineId: discipline.data.id,
@@ -136,7 +136,7 @@ router.get(
 
     const practicalClasses = await axios.get(
       // МАССИВ ПЗ
-      `${process.env.BACK_URL} + '/practicalClass/getAllPracticalClasses'`,
+      `${process.env.BACK_URL}/practicalClass/getAllPracticalClasses`,
       {
         params: {
           disciplineId: discipline.data.id,
@@ -146,7 +146,7 @@ router.get(
 
     const lections = await axios.get(
       // МАССИВ ЛЕКЦИЙ
-      `${process.env.BACK_URL} + '/lections/getAllLections'`,
+      `${process.env.BACK_URL}/lections/getAllLections`,
       {
         params: {
           disciplineId: discipline.data.id,
@@ -155,7 +155,7 @@ router.get(
     );
 
     const competenceIds = await axios.get(
-      `${process.env.BACK_URL} + '/rpd/getAllRpdCompetence'`,
+      `${process.env.BACK_URL}/rpd/getAllRpdCompetence`,
       {
         params: {
           rpdId: rpd.data.id,
@@ -167,7 +167,7 @@ router.get(
       // МАССИВ КОМПЕТЕНЦИЙ
       competenceIds.data.map(async (item) => {
         const response = await axios.get(
-          `${process.env.BACK_URL} + '/competence/getCompetences'`,
+          `${process.env.BACK_URL}/competence/getCompetences`,
           {
             params: {
               id: item.competenceId,
@@ -179,7 +179,7 @@ router.get(
     );
 
     const examQuestions = await axios.get(
-      `${process.env.BACK_URL} + '/examQuestions/getAllExamQuestions'`,
+      `${process.env.BACK_URL}/examQuestions/getAllExamQuestions`,
       {
         params: {
           disciplineId: discipline.data.id,
