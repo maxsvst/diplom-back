@@ -47,7 +47,7 @@ const checkIsPracticalClassInTopicExist = async (
 };
 
 const checkIsLectionInTopicExist = async (topicId, lectionName) => {
-  const item = await dataBase("Lections")
+  const item = await dataBase("Lection")
     .select("*")
     .where({ topicId: topicId, lectionName: lectionName })
     .first();
@@ -56,10 +56,10 @@ const checkIsLectionInTopicExist = async (topicId, lectionName) => {
   }
 };
 
-const checkIsExamQuestionInTopicExist = async (topicId, question) => {
-  const item = await dataBase("ExamQuestions")
+const checkIsExamQuestionInTopicExist = async (topicId, examQuestionName) => {
+  const item = await dataBase("ExamQuestion")
     .select("*")
-    .where({ topicId: topicId, question: question })
+    .where({ topicId: topicId, examQuestionName: examQuestionName })
     .first();
   if (item) {
     return Promise.reject("Такой вопрос к экзамену теме уже существует");
@@ -229,7 +229,7 @@ const checkIsRpdPracticalClassUnique = async (
   }
 };
 
-const checkIsRpdLectionsUnique = async (rpdId, lectionId, lectionHours) => {
+const checkIsRpdLectionUnique = async (rpdId, lectionId, lectionHours) => {
   const rpdIdExist = await dataBase("Rpd")
     .select("*")
     .where({
@@ -237,14 +237,14 @@ const checkIsRpdLectionsUnique = async (rpdId, lectionId, lectionHours) => {
     })
     .first();
 
-  const lectionIdExist = await dataBase("Lections")
+  const lectionIdExist = await dataBase("Lection")
     .select("*")
     .where({
       id: lectionId,
     })
     .first();
 
-  const item = await dataBase("Rpd_Lections")
+  const item = await dataBase("Rpd_Lection")
     .select("*")
     .where({
       rpdId,
@@ -257,7 +257,7 @@ const checkIsRpdLectionsUnique = async (rpdId, lectionId, lectionHours) => {
   } else if (!lectionIdExist) {
     return Promise.reject("Такой лекции не существует");
   } else if (item) {
-    return Promise.reject("Такая запись в Rpd_Lections уже существует");
+    return Promise.reject("Такая запись в Rpd_Lection уже существует");
   }
 };
 
@@ -353,7 +353,7 @@ module.exports = {
   checkIsRpdCompetenceUnique,
   checkIsRpdLaboratoryClassUnique,
   checkIsRpdPracticalClassUnique,
-  checkIsRpdLectionsUnique,
+  checkIsRpdLectionUnique,
   checkIsRpdTopicUnique,
   checkIsDisciplineCompetenceUnique,
 };

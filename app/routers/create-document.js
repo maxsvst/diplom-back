@@ -144,9 +144,9 @@ router.get(
       }
     );
 
-    const lections = await axios.get(
+    const lection = await axios.get(
       // МАССИВ ЛЕКЦИЙ
-      `${process.env.BACK_URL}/lections/getAllLections`,
+      `${process.env.BACK_URL}/lection/getAllLection`,
       {
         params: {
           disciplineId: discipline.data.id,
@@ -178,8 +178,8 @@ router.get(
       })
     );
 
-    const examQuestions = await axios.get(
-      `${process.env.BACK_URL}/examQuestions/getAllExamQuestions`,
+    const examQuestion = await axios.get(
+      `${process.env.BACK_URL}/examQuestion/getAllExamQuestion`,
       {
         params: {
           disciplineId: discipline.data.id,
@@ -250,7 +250,7 @@ router.get(
                   : acc + obj.practicalClassName + ", ",
               ""
             );
-          const lects = lections.data
+          const lects = lection.data
             .filter((item) => item.topicId === topic.id)
             .reduce(
               (acc, obj, index, arrayRef) =>
@@ -265,17 +265,17 @@ router.get(
             name: topic.name,
             laboratoryClasses: labs,
             practicalClasses: practice,
-            lections: lects,
+            lection: lects,
           };
         }),
         thirdTable: tableTopics.map((topic, index) => {
-          const filteredQuestions = examQuestions.data.filter(
+          const filteredQuestion = examQuestion.data.filter(
             (question) => topic.id === question.topicId
           );
           return {
             topicIndex: index + 1,
             name: topic.name,
-            question: filteredQuestions.map((item, index) => {
+            question: filteredQuestion.map((item, index) => {
               return {
                 questionIndex: index + 1,
                 questionName: item.question,
@@ -283,7 +283,7 @@ router.get(
             }),
           };
         }),
-        allQuestions: examQuestions.data.map((item, index) => {
+        allQuestion: examQuestion.data.map((item, index) => {
           return { id: index + 1, questionName: item.question };
         }),
         topics: topics.data
@@ -295,7 +295,7 @@ router.get(
         practicalClasses: practicalClasses.data
           .map((item) => item)
           .flat(Infinity),
-        lections: lections.data.map((item) => item).flat(Infinity),
+        lection: lection.data.map((item) => item).flat(Infinity),
         rpdTotalHours: rpd.data.rpdTotalHours,
         rpdLectionHours: rpd.data.rpdLectionHours,
         rpdPracticalHours: rpd.data.rpdPracticalHours,

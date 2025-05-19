@@ -14,13 +14,14 @@ const { dataBase } = require(__dir.libs + "/dataBase");
 const teacherRouter = require(__dir.routers + "/teacher");
 const competenceRouter = require(__dir.routers + "/competence");
 const disciplineRouter = require(__dir.routers + "/discipline");
-const examQuestionsRouter = require(__dir.routers + "/examQuestions");
-const laboratoryClassRouter = require(__dir.routers + "/laboratoryClass");
-const lectionsRouter = require(__dir.routers + "/lections");
-const practicalClassRouter = require(__dir.routers + "/practicalClass");
+const examQuestionRouter = require(__dir.routers + "/exam-question");
+const laboratoryClassRouter = require(__dir.routers + "/laboratory-class");
+const lectionRouter = require(__dir.routers + "/lection");
+const practicalClassRouter = require(__dir.routers + "/practical-class");
 const rpdRouter = require(__dir.routers + "/rpd");
 const topicRouter = require(__dir.routers + "/topic");
-const documentRouter = require(__dir.routers + "/createDocument");
+const documentRouter = require(__dir.routers + "/create-document");
+const authRouter = require(__dir.routers + "/auth");
 
 const app = Express();
 const PORT = process.env.PORT || 8080;
@@ -41,13 +42,14 @@ app.use(Express.json());
 app.use("/teacher", teacherRouter);
 app.use("/competence", competenceRouter);
 app.use("/discipline", disciplineRouter);
-app.use("/examQuestions", examQuestionsRouter);
-app.use("/laboratoryClass", laboratoryClassRouter);
-app.use("/lections", lectionsRouter);
-app.use("/practicalClass", practicalClassRouter);
+app.use("/exam-question", examQuestionRouter);
+app.use("/laboratory-class", laboratoryClassRouter);
+app.use("/lection", lectionRouter);
+app.use("/practical-class", practicalClassRouter);
 app.use("/rpd", rpdRouter);
 app.use("/topic", topicRouter);
 app.use("/document", documentRouter);
+app.use("/auth", authRouter);
 
 const start = async () => {
   try {

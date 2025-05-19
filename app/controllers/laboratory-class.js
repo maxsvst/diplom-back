@@ -1,12 +1,10 @@
 const { dataBase } = require(__dir.libs + "/dataBase");
 
 const addLaboratoryClass = async (
-  disciplineId,
   topicId,
   laboratoryClassName
 ) => {
   const data = {
-    disciplineId,
     topicId,
     laboratoryClassName,
   };
@@ -14,16 +12,20 @@ const addLaboratoryClass = async (
   return await dataBase("LaboratoryClass").insert(data);
 };
 
-const getAllLaboratoryClasses = (data) => {
-  return dataBase("LaboratoryClass").select("*").where(data);
+const getAllLaboratoryClass = (data) => {
+  const query = dataBase("LaboratoryClass").select("*");
+
+  query.where({ topicId: data.topicId });
+
+  return query;
 };
 
 const getLaboratoryClass = (data) => {
   return dataBase("LaboratoryClass").select("*").where(data).first();
 };
 
-const deleteLaboratoryClass = (id) => {
-  return dataBase("LaboratoryClass").del().where(id);
+const deleteLaboratoryClass = (laboratoryClassId) => {
+  return dataBase("LaboratoryClass").del().where(laboratoryClassId);
 };
 
 const updateLaboratoryClass = async (data) => {
@@ -37,7 +39,7 @@ const updateLaboratoryClass = async (data) => {
 
 module.exports = {
   addLaboratoryClass,
-  getAllLaboratoryClasses,
+  getAllLaboratoryClass,
   getLaboratoryClass,
   deleteLaboratoryClass,
   updateLaboratoryClass,

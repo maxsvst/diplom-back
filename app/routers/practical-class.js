@@ -2,15 +2,16 @@ const Router = require("express");
 const { checkSchema, validationResult } = require("express-validator");
 
 const { checkIsPracticalClassInTopicExist } = require("../helpers/utils");
-const practicalClassController = require(__dir.controllers + "/practicalClass");
+const practicalClassController = require(__dir.controllers + "/practical-class");
 
 const router = new Router();
 
 router.post(
-  "/addPracticalClass",
+  "/add-practical-class",
   checkSchema({
     topicId: {
-      isNumeric: { min: 0 },
+      isUUID: true,
+      errorMessage: 'topicId must be a valid UUID v4',
     },
     practicalClassName: {
       isString: true,
@@ -32,9 +33,8 @@ router.post(
     console.log(errors);
     if (!errors.isEmpty())
       return res.status(400).json({ errors: errors.array() });
-    const { disciplineId, topicId, practicalClassName } = req.body;
+    const { topicId, practicalClassName } = req.body;
     practicalClassController.addPracticalClass(
-      disciplineId,
       topicId,
       practicalClassName
     );
@@ -43,52 +43,41 @@ router.post(
   }
 );
 
-router.get(
-  "/getAllPracticalClasses",
-  checkSchema({
-    disciplineId: {
-      isNumeric: { min: 0 },
-    },
-  }),
-  async (req, res) => {
-    const errors = validationResult(req);
-    console.log(errors);
-    if (!errors.isEmpty())
-      return res.status(400).json({ errors: errors.array() });
-    const result = await practicalClassController.getAllPracticalClasses({
-      disciplineId: req.query.disciplineId,
-    });
+router.get("/get-all-practical-classes", async (req, res) => {
+  const { topicId } = req.query;
+  const result = await practicalClassController.getAllPracticalClass({
+    topicId,
+  });
 
-    res.send(result);
-  }
-);
+  res.send(result);
+});
 
 router.get(
-  "/getPracticalClass",
-  checkSchema({
-    practicalClassName: {
-      isString: true,
-      isLength: {
-        options: {
-          min: 1,
-        },
-      },
-    },
-  }),
+  "/get-practical-class",
+  // checkSchema({
+  //   practicalClassName: {
+  //     isString: true,
+  //     isLength: {
+  //       options: {
+  //         min: 1,
+  //       },
+  //     },
+  //   },
+  // }),
   async (req, res) => {
     const errors = validationResult(req);
     console.log(errors);
     if (!errors.isEmpty())
       return res.status(400).json({ errors: errors.array() });
     const result = await practicalClassController.getPracticalClass({
-      practicalClassName: req.query.practicalClassName,
+      practicalClassId: req.query.practicalClassId,
     });
 
     res.send(result);
   }
 );
 
-router.delete("/deletePracticalClass", async (req, res) => {
+router.delete("/delete-practical-class", async (req, res) => {
   const { practicalClassId } = req.query;
   await practicalClassController.deletePracticalClass({
     practicalClassId,
@@ -97,7 +86,7 @@ router.delete("/deletePracticalClass", async (req, res) => {
   res.send({ isDeleted: true });
 });
 
-router.put("/updatePracticalClass", async (req, res) => {
+router.put("/update-practical-class", async (req, res) => {
   const { practicalClassId, disciplineId, practicalClassName } = req.body;
 
   const result = await practicalClassController.updatePracticalClass({

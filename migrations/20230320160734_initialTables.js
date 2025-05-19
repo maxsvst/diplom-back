@@ -1,21 +1,26 @@
 exports.up = async function (knex) {
   await knex.schema.createTable("Teacher", function (table) {
-    table.increments("id").primary();
+    table.uuid('teacherId').primary().defaultTo(knex.raw('uuid_generate_v4()'));
     table.string("fullName").unique().notNullable();
     table.string("email").unique().notNullable();
     table.string("password").notNullable();
-    table.string("rank").notNullable();
-    table.enu("position", [
+    table.enu("rank", [
       "Ассистент",
       "Преподаватель",
       "Старший преподаватель",
       "Доцент",
       "Профессор",
-    ]);
+    ]).notNullable();
+    table.string("position").notNullable();
+    table.enu("credentials", [
+      "ROLE_ADMIN",
+      "ROLE_USER",
+    ]).defaultTo("ROLE_USER")
+    table.string("refreshToken").notNullable();
   });
 
   await knex.schema.createTable("Discipline", function (table) {
-    table.increments("id").primary();
+    table.uuid('disciplineId').primary().defaultTo(knex.raw('uuid_generate_v4()'));
     table.string("fullName").unique().notNullable();
     table.string("shortName").notNullable();
     table.string("code").notNullable();
@@ -23,148 +28,175 @@ exports.up = async function (knex) {
     table.string("studyField").notNullable();
   });
 
+  await knex.schema.createTable("DisciplinePurpose", function (table) {
+    table.uuid('disciplinePurposeId').primary().defaultTo(knex.raw('uuid_generate_v4()'));
+    table.uuid("disciplineId").notNullable();
+    table.string("disciplinePurposeName").notNullable();
+
+    table
+      .foreign("disciplineId")
+      .references("disciplineId")
+      .inTable("Discipline")
+      .onUpdate("CASCADE")
+      .onDelete("CASCADE");
+  });
+
+  await knex.schema.createTable("DisciplineTask", function (table) {
+    table.uuid('disciplineTaskId').primary().defaultTo(knex.raw('uuid_generate_v4()'));
+    table.uuid("disciplineId").notNullable();
+    table.string("disciplineTaskName").notNullable();
+
+    table
+      .foreign("disciplineId")
+      .references("disciplineId")
+      .inTable("Discipline")
+      .onUpdate("CASCADE")
+      .onDelete("CASCADE");
+  });
+
   await knex.schema.createTable("Topic", function (table) {
-    table.increments("id").primary();
-    table.integer("disciplineId").notNullable();
+    table.uuid('topicId').primary().defaultTo(knex.raw('uuid_generate_v4()'));
+    table.uuid("disciplineId").notNullable();
     table.string("topicName").notNullable();
 
     table
       .foreign("disciplineId")
-      .references("id")
+      .references("disciplineId")
       .inTable("Discipline")
       .onUpdate("CASCADE")
       .onDelete("CASCADE");
   });
 
   await knex.schema.createTable("Discipline_Teacher", function (table) {
-    table.integer("teacherId").notNullable();
-    table.integer("disciplineId").notNullable();
+    table.uuid("teacherId").notNullable();
+    table.uuid("disciplineId").notNullable();
 
     table
       .foreign("teacherId")
-      .references("id")
+      .references("teacherId")
       .inTable("Teacher")
       .onUpdate("CASCADE")
       .onDelete("CASCADE");
 
     table
       .foreign("disciplineId")
-      .references("id")
+      .references("disciplineId")
       .inTable("Discipline")
       .onUpdate("CASCADE")
       .onDelete("CASCADE");
+
+    table.primary(['teacherId', 'disciplineId']);
   });
 
-  await knex.schema.createTable("ExamQuestions", function (table) {
-    table.increments("id").primary();
-    table.integer("disciplineId").notNullable();
-    table.integer("topicId").notNullable();
-    table.string("question").notNullable();
+  await knex.schema.createTable("ExamQuestion", function (table) {
+    table.uuid('examQuestionId').primary().defaultTo(knex.raw('uuid_generate_v4()'));
+    table.uuid("disciplineId").notNullable();
+    table.uuid("topicId").notNullable();
+    table.string("examQuestionName").notNullable();
 
     table
       .foreign("disciplineId")
-      .references("id")
+      .references("disciplineId")
       .inTable("Discipline")
       .onUpdate("CASCADE")
       .onDelete("CASCADE");
 
     table
       .foreign("topicId")
-      .references("id")
+      .references("topicId")
       .inTable("Topic")
       .onUpdate("CASCADE")
       .onDelete("CASCADE");
   });
 
-  await knex.schema.createTable("Lections", function (table) {
-    table.increments("id").primary();
-    table.integer("disciplineId").notNullable();
-    table.integer("topicId").notNullable();
-    table.string("lectionName").notNullable();
-
-    table
-      .foreign("disciplineId")
-      .references("id")
-      .inTable("Discipline")
-      .onUpdate("CASCADE")
-      .onDelete("CASCADE");
+  await knex.schema.createTable("TopicConcept", function (table) {
+    table.uuid('topicConceptId').primary().defaultTo(knex.raw('uuid_generate_v4()'));
+    table.uuid("topicId").notNullable();
+    table.string("topicConceptName").notNullable();
 
     table
       .foreign("topicId")
-      .references("id")
+      .references("topicId")
+      .inTable("Topic")
+      .onUpdate("CASCADE")
+      .onDelete("CASCADE");
+  });
+
+  await knex.schema.createTable("Lection", function (table) {
+    table.uuid('lectionId').primary().defaultTo(knex.raw('uuid_generate_v4()'));
+    table.uuid("topicId").notNullable();
+    table.string("lectionName").notNullable();
+
+    table
+      .foreign("topicId")
+      .references("topicId")
       .inTable("Topic")
       .onUpdate("CASCADE")
       .onDelete("CASCADE");
   });
 
   await knex.schema.createTable("Rpd", function (table) {
-    table.increments("id").primary();
-    table.integer("disciplineId").notNullable();
-     table.integer("rpdTotalHours").notNullable();
+    table.uuid('rpdId').primary().defaultTo(knex.raw('uuid_generate_v4()'));
+    table.uuid("disciplineId").notNullable();
+    table.integer("rpdTotalHours").notNullable();
     table.integer("rpdLectionHours").notNullable();
     table.integer("rpdPracticalHours").notNullable();
     table.integer("rpdLaboratoryHours").notNullable();
     table.integer("rpdSelfstudyHours").notNullable();
     table.integer("rpdAdditionalHours").notNullable();
-    table.integer("year").notNullable();
+    table.date("rpdDate").notNullable();
 
     table
       .foreign("disciplineId")
-      .references("id")
+      .references("disciplineId")
       .inTable("Discipline")
       .onUpdate("CASCADE")
       .onDelete("CASCADE");
   });
 
-  await knex.schema.createTable("Rpd_Lections", function (table) {
-    table.integer("rpdId").notNullable();
-    table.integer("lectionId").notNullable();
+  await knex.schema.createTable("Rpd_Lection", function (table) {
+    table.uuid("rpdId").notNullable();
+    table.uuid("lectionId").notNullable();
     table.integer("lectionHours").notNullable();
 
     table
       .foreign("rpdId")
-      .references("id")
+      .references("rpdId")
       .inTable("Rpd")
       .onUpdate("CASCADE")
       .onDelete("CASCADE");
 
     table
       .foreign("lectionId")
-      .references("id")
-      .inTable("Lections")
+      .references("lectionId")
+      .inTable("Lection")
       .onUpdate("CASCADE")
       .onDelete("CASCADE");
+
+    table.primary(['rpdId', 'lectionId']);
   });
 
   await knex.schema.createTable("PracticalClass", function (table) {
-    table.increments("practicalClassId").primary();
-    table.integer("disciplineId").notNullable();
-    table.integer("topicId").notNullable();
+    table.uuid('practicalClassId').primary().defaultTo(knex.raw('uuid_generate_v4()'));
+    table.uuid("topicId").notNullable();
     table.string("practicalClassName").notNullable();
 
     table
-      .foreign("disciplineId")
-      .references("id")
-      .inTable("Discipline")
-      .onUpdate("CASCADE")
-      .onDelete("CASCADE");
-
-    table
       .foreign("topicId")
-      .references("id")
+      .references("topicId")
       .inTable("Topic")
       .onUpdate("CASCADE")
       .onDelete("CASCADE");
   });
 
   await knex.schema.createTable("Rpd_PracticalClass", function (table) {
-    table.integer("rpdId").notNullable();
-    table.integer("practicalClassId").notNullable();
+    table.uuid("rpdId").notNullable();
+    table.uuid("practicalClassId").notNullable();
     table.integer("practicalHours").notNullable();
 
     table
       .foreign("rpdId")
-      .references("id")
+      .references("rpdId")
       .inTable("Rpd")
       .onUpdate("CASCADE")
       .onDelete("CASCADE");
@@ -175,37 +207,31 @@ exports.up = async function (knex) {
       .inTable("PracticalClass")
       .onUpdate("CASCADE")
       .onDelete("CASCADE");
+
+    table.primary(['rpdId', 'practicalClassId']);
   });
 
   await knex.schema.createTable("LaboratoryClass", function (table) {
-    table.increments("laboratoryClassId").primary();
-    table.integer("disciplineId").notNullable();
-    table.integer("topicId").notNullable();
+    table.uuid('laboratoryClassId').primary().defaultTo(knex.raw('uuid_generate_v4()'));
+    table.uuid("topicId").notNullable();
     table.string("laboratoryClassName").notNullable();
 
     table
-      .foreign("disciplineId")
-      .references("id")
-      .inTable("Discipline")
-      .onUpdate("CASCADE")
-      .onDelete("CASCADE");
-
-    table
       .foreign("topicId")
-      .references("id")
+      .references("topicId")
       .inTable("Topic")
       .onUpdate("CASCADE")
       .onDelete("CASCADE");
   });
 
   await knex.schema.createTable("Rpd_LaboratoryClass", function (table) {
-    table.integer("rpdId").notNullable();
-    table.integer("laboratoryClassId").notNullable();
+    table.uuid("rpdId").notNullable();
+    table.uuid("laboratoryClassId").notNullable();
     table.integer("laboratoryHours").notNullable();
 
     table
       .foreign("rpdId")
-      .references("id")
+      .references("rpdId")
       .inTable("Rpd")
       .onUpdate("CASCADE")
       .onDelete("CASCADE");
@@ -216,11 +242,13 @@ exports.up = async function (knex) {
       .inTable("LaboratoryClass")
       .onUpdate("CASCADE")
       .onDelete("CASCADE");
+
+    table.primary(['rpdId', 'laboratoryClassId']);
   });
 
   await knex.schema.createTable("Rpd_Topic", function (table) {
-    table.integer("rpdId").notNullable();
-    table.integer("topicId").notNullable();
+    table.uuid("rpdId").notNullable();
+    table.uuid("topicId").notNullable();
     table.integer("topicTotalHours").notNullable();
     table.integer("topicLectionHours").notNullable();
     table.integer("topicPracticalHours").notNullable();
@@ -229,21 +257,23 @@ exports.up = async function (knex) {
 
     table
       .foreign("rpdId")
-      .references("id")
+      .references("rpdId")
       .inTable("Rpd")
       .onUpdate("CASCADE")
       .onDelete("CASCADE");
 
     table
       .foreign("topicId")
-      .references("id")
+      .references("topicId")
       .inTable("Topic")
       .onUpdate("CASCADE")
       .onDelete("CASCADE");
+
+    table.primary(['rpdId', 'topicId']);
   });
 
   await knex.schema.createTable("Competence", function (table) {
-    table.increments("id").primary();
+    table.uuid('competenceId').primary().defaultTo(knex.raw('uuid_generate_v4()'));
     table.string("competenceType").notNullable();
     table.string("competenceCode").notNullable();
     table.string("competenceName").notNullable();
@@ -252,42 +282,46 @@ exports.up = async function (knex) {
   });
 
   await knex.schema.createTable("Discipline_Competence", function (table) {
-    table.integer("competenceId").notNullable();
-    table.integer("disciplineId").notNullable();
+    table.uuid("competenceId").notNullable();
+    table.uuid("disciplineId").notNullable();
 
     table
       .foreign("competenceId")
-      .references("id")
+      .references("competenceId")
       .inTable("Competence")
       .onUpdate("CASCADE")
       .onDelete("CASCADE");
 
     table
       .foreign("disciplineId")
-      .references("id")
+      .references("disciplineId")
       .inTable("Discipline")
       .onUpdate("CASCADE")
       .onDelete("CASCADE");
+
+    table.primary(['competenceId', 'disciplineId']);
   });
 
   await knex.schema.createTable("Rpd_Competence", function (table) {
-    table.integer("rpdId").notNullable();
-    table.integer("competenceId").notNullable();
+    table.uuid("rpdId").notNullable();
+    table.uuid("competenceId").notNullable();
 
     table
       .foreign("rpdId")
-      .references("id")
+      .references("rpdId")
       .inTable("Rpd")
       .onUpdate("CASCADE")
       .onDelete("CASCADE");
 
     table
       .foreign("competenceId")
-      .references("id")
+      .references("competenceId")
       .inTable("Competence")
       .onUpdate("CASCADE")
       .onDelete("CASCADE");
+
+    table.primary(['competenceId', 'rpdId']);
   });
 };
 
-exports.down = function (knex) {};
+exports.down = function (knex) { };

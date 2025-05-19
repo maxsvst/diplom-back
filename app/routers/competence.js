@@ -7,8 +7,12 @@ const competenceController = require(__dir.controllers + "/competence");
 const router = new Router();
 
 router.post(
-  "/addCompetence",
+  "/add-competence",
   checkSchema({
+    disciplineId: {
+      isUUID: true,
+      errorMessage: 'disciplineId must be a valid UUID v4',
+    },
     competenceType: {
       isString: true,
       isLength: {
@@ -17,11 +21,11 @@ router.post(
         },
       },
       custom: {
-        options: async (competenceType, request) => {
-          (competenceCode = request.req.body.competenceCode),
-            (competenceName = request.req.body.competenceName),
-            (indicatorCode = request.req.body.indicatorCode),
-            (indicatorName = request.req.body.indicatorName);
+        options: async (competenceType, { req }) => {
+          (competenceCode = req.body.competenceCode),
+            (competenceName = req.body.competenceName),
+            (indicatorCode = req.body.indicatorCode),
+            (indicatorName = req.body.indicatorName);
           await checkIsCompetenceCodeUnique(
             competenceType,
             competenceCode,
@@ -65,12 +69,14 @@ router.post(
       },
     },
   }),
-  (req, res) => {
+  async (req, res) => {
     const errors = validationResult(req);
-    console.log(errors);
+
     if (!errors.isEmpty())
       return res.status(400).json({ errors: errors.array() });
+
     const {
+      disciplineId,
       competenceType,
       competenceCode,
       competenceName,
@@ -78,15 +84,20 @@ router.post(
       indicatorName,
     } = req.body;
 
-    competenceController.addCompetence(
-      competenceType,
-      competenceCode,
-      competenceName,
-      indicatorCode,
-      indicatorName
-    );
-
-    res.send({ isAdded: true });
+    try {
+      const competenceId = await competenceController.addCompetence(
+        disciplineId,
+        competenceType,
+        competenceCode,
+        competenceName,
+        indicatorCode,
+        indicatorName
+      );
+      res.status(201).json({ competenceId, isAdded: true });
+    } catch (error) {
+      console.error("Error in /addCompetence route:", error);
+      res.status(500).json({ error: "Failed to add competence" });
+    }
   }
 );
 
@@ -102,13 +113,16 @@ router.get("/getUniqueCompetence", async (req, res) => {
   res.send(result);
 });
 
-router.get("/getAllCompetences", async (req, res) => {
-  const result = await competenceController.getAllCompetences();
+router.get("/get-all-competences", async (req, res) => {
+  const { disciplineId } = req.query;
+  const result = await competenceController.getAllCompetences({
+    disciplineId
+  });
 
   res.send(result);
 });
 
-router.get("/getCompetences", async (req, res) => {
+router.get("/get-competence", async (req, res) => {
   const { id } = req.query;
   const result = await competenceController.getCompetences({
     id,
@@ -117,18 +131,17 @@ router.get("/getCompetences", async (req, res) => {
   res.send(result);
 });
 
-router.delete("/deleteCompetence", async (req, res) => {
-  const { id } = req.query;
+router.delete("/delete-competence", async (req, res) => {
+  const { competenceId } = req.query;
   await competenceController.deleteCompetence({
-    id,
+    competenceId,
   });
 
   res.send({ isDeleted: true });
 });
 
-router.put("/updateCompetence", async (req, res) => {
+router.put("/update-competence", async (req, res) => {
   const {
-    id,
     competenceType,
     competenceCode,
     competenceName,
@@ -137,7 +150,6 @@ router.put("/updateCompetence", async (req, res) => {
   } = req.body;
 
   const result = await competenceController.updateCompetence({
-    id,
     competenceType,
     competenceCode,
     competenceName,

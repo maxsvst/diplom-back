@@ -7,10 +7,11 @@ const topicController = require(__dir.controllers + "/topic");
 const router = new Router();
 
 router.post(
-  "/addTopic",
+  "/add-topic",
   checkSchema({
     disciplineId: {
-      isNumeric: { min: 0 },
+      isUUID: true,
+      errorMessage: 'disciplineId must be a valid UUID v4',
     },
     topicName: {
       isString: true,
@@ -27,24 +28,30 @@ router.post(
       },
     },
   }),
-  (req, res) => {
+  async (req, res) => {
     const errors = validationResult(req);
-    console.log(errors);
+
     if (!errors.isEmpty())
       return res.status(400).json({ errors: errors.array() });
-    const { disciplineId, topicName } = req.body;
-    topicController.addTopic(disciplineId, topicName);
 
-    res.send({ isAdded: true });
+
+    const { disciplineId, topicName } = req.body;
+
+    try {
+      const topicId = await topicController.addTopic(disciplineId, topicName);
+      res.status(201).json({ topicId, isAdded: true });
+    } catch (error) {
+      console.error("Error in /add-topic route:", error);
+      res.status(500).json({ error: "Failed to add competence" });
+    }
   }
 );
 
 router.get(
-  "/getAllTopics",
+  "/get-all-topics",
   checkSchema({
-    disciplineId: {
-      isNumeric: { min: 0 },
-    },
+    isUUID: { options: { version: '4' } },
+    errorMessage: 'disciplineId must be a valid UUID v4',
   }),
   async (req, res) => {
     const errors = validationResult(req);
@@ -59,28 +66,28 @@ router.get(
   }
 );
 
-router.get("/getTopic", async (req, res) => {
+router.get("/get-topic", async (req, res) => {
   const result = await topicController.getTopic({
-    topicName: req.query.topicName,
+    topicId: req.query.topicId,
   });
 
   res.send(result);
 });
 
-router.delete("/deleteTopic", async (req, res) => {
-  const { id } = req.query;
+router.delete("/delete-topic", async (req, res) => {
+  const { topicId } = req.query;
   await topicController.deleteTopic({
-    id,
+    topicId,
   });
 
   res.send({ isDeleted: true });
 });
 
-router.put("/updateTopic", async (req, res) => {
-  const { id, topicName } = req.body;
+router.put("/update-topic", async (req, res) => {
+  const { topicId, topicName } = req.body;
 
   const result = await topicController.updateTopic({
-    id,
+    topicId,
     topicName,
   });
 

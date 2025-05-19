@@ -3,15 +3,16 @@ const { checkSchema, validationResult } = require("express-validator");
 
 const { checkIsLaboratoryClassInTopicExist } = require("../helpers/utils");
 const laboratoryClassController = require(__dir.controllers +
-  "/laboratoryClass");
+  "/laboratory-class");
 
 const router = new Router();
 
 router.post(
-  "/addLaboratoryClass",
+  "/add-laboratory-class",
   checkSchema({
     topicId: {
-      isNumeric: { min: 0 },
+      isUUID: true,
+      errorMessage: 'topicId must be a valid UUID v4',
     },
     laboratoryClassName: {
       isString: true,
@@ -36,9 +37,8 @@ router.post(
     console.log(errors);
     if (!errors.isEmpty())
       return res.status(400).json({ errors: errors.array() });
-    const { disciplineId, topicId, laboratoryClassName } = req.body;
+    const { topicId, laboratoryClassName } = req.body;
     laboratoryClassController.addLaboratoryClass(
-      disciplineId,
       topicId,
       laboratoryClassName
     );
@@ -47,28 +47,17 @@ router.post(
   }
 );
 
-router.get(
-  "/getAllLaboratoryClasses",
-  checkSchema({
-    disciplineId: {
-      isNumeric: { min: 0 },
-    },
-  }),
-  async (req, res) => {
-    const errors = validationResult(req);
-    console.log(errors);
-    if (!errors.isEmpty())
-      return res.status(400).json({ errors: errors.array() });
-    const result = await laboratoryClassController.getAllLaboratoryClasses({
-      disciplineId: req.query.disciplineId,
-    });
+router.get("/get-all-laboratory-classes", async (req, res) => {
+  const { topicId } = req.query;
+  const result = await laboratoryClassController.getAllLaboratoryClass({
+    topicId,
+  });
 
-    res.send(result);
-  }
-);
+  res.send(result);
+});
 
 router.get(
-  "/getLaboratoryClass",
+  "/get-laboratory-class",
   checkSchema({
     laboratoryClassName: {
       isString: true,
@@ -92,7 +81,7 @@ router.get(
   }
 );
 
-router.delete("/deleteLaboratoryClass", async (req, res) => {
+router.delete("/delete-laboratory-class", async (req, res) => {
   const { laboratoryClassId } = req.query;
   await laboratoryClassController.deleteLaboratoryClass({
     laboratoryClassId,
@@ -101,7 +90,7 @@ router.delete("/deleteLaboratoryClass", async (req, res) => {
   res.send({ isDeleted: true });
 });
 
-router.put("/updateLaboratoryClass", async (req, res) => {
+router.put("/update-laboratory-class", async (req, res) => {
   const { laboratoryClassId, disciplineId, laboratoryClassName } = req.body;
 
   const result = await laboratoryClassController.updateLaboratoryClass({

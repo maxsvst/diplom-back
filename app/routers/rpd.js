@@ -6,7 +6,7 @@ const {
   checkIsRpdCompetenceUnique,
   checkIsRpdLaboratoryClassUnique,
   checkIsRpdPracticalClassUnique,
-  checkIsRpdLectionsUnique,
+  checkIsRpdLectionUnique,
   checkIsRpdTopicUnique,
 } = require("../helpers/utils");
 const rpdController = require(__dir.controllers + "/rpd");
@@ -14,32 +14,32 @@ const rpdController = require(__dir.controllers + "/rpd");
 const router = new Router();
 
 router.post(
-  "/addRpd",
+  "/add-rpd",
   checkSchema({
-    disciplineId: {
-      isNumeric: { min: 0 },
-      custom: {
-        options: async (disciplineId, request) => {
-          (rpdTotalHours = request.req.body.rpdTotalHours),
-            (rpdLectionHours = request.req.body.rpdLectionHours),
-            (rpdPracticalHours = request.req.body.rpdPracticalHours),
-            (rpdLaboratoryHours = request.req.body.rpdLaboratoryHours),
-            (rpdSelfstudyHours = request.req.body.rpdSelfstudyHours),
-            (rpdAdditionalHours = request.req.body.rpdAdditionalHours),
-            (year = request.req.body.year),
-            await checkIsRpdUnique(
-              disciplineId,
-              rpdTotalHours,
-              rpdLectionHours,
-              rpdPracticalHours,
-              rpdLaboratoryHours,
-              rpdSelfstudyHours,
-              rpdAdditionalHours,
-              year
-            );
-        },
-      },
-    },
+    // disciplineId: {
+    //   isNumeric: { min: 0 },
+    //   custom: {
+    //     options: async (disciplineId, request) => {
+    //       (rpdTotalHours = request.req.body.rpdTotalHours),
+    //         (rpdLectionHours = request.req.body.rpdLectionHours),
+    //         (rpdPracticalHours = request.req.body.rpdPracticalHours),
+    //         (rpdLaboratoryHours = request.req.body.rpdLaboratoryHours),
+    //         (rpdSelfstudyHours = request.req.body.rpdSelfstudyHours),
+    //         (rpdAdditionalHours = request.req.body.rpdAdditionalHours),
+    //         (year = request.req.body.year),
+    //         await checkIsRpdUnique(
+    //           disciplineId,
+    //           rpdTotalHours,
+    //           rpdLectionHours,
+    //           rpdPracticalHours,
+    //           rpdLaboratoryHours,
+    //           rpdSelfstudyHours,
+    //           rpdAdditionalHours,
+    //           year
+    //         );
+    //     },
+    //   },
+    // },
     rpdTotalHours: {
       isNumeric: { min: 0 },
     },
@@ -96,19 +96,19 @@ router.post(
 );
 
 router.get(
-  "/getRpd",
-  checkSchema({
-    id: {
-      isNumeric: { min: 0 },
-    },
-  }),
+  "/get-rpd",
+  // checkSchema({
+  //   id: {
+  //     isNumeric: { min: 0 },
+  //   },
+  // }),
   async (req, res) => {
     const errors = validationResult(req);
     console.log(errors);
     if (!errors.isEmpty())
       return res.status(400).json({ errors: errors.array() });
     const result = await rpdController.getRpd({
-      id: req.query.id,
+      rpdId: req.query.rpdId,
     });
 
     res.send(result);
@@ -166,7 +166,7 @@ router.get(
   }
 );
 
-router.delete("/deleteRpd", async (req, res) => {
+router.delete("/delete-rpd", async (req, res) => {
   const { id } = req.query;
   await rpdController.deleteRpd({
     id,
@@ -175,7 +175,7 @@ router.delete("/deleteRpd", async (req, res) => {
   res.send({ isDeleted: true });
 });
 
-router.put("/updateRpd", async (req, res) => {
+router.put("/update-rpd", async (req, res) => {
   const { id, year } = req.body;
 
   const result = await rpdController.updateRpd({
@@ -383,7 +383,7 @@ router.put("/updateRpdPracticalClass", async (req, res) => {
 });
 
 router.post(
-  "/addRpdLections",
+  "/addRpdLection",
   checkSchema({
     rpdId: {
       isNumeric: { min: 0 },
@@ -391,7 +391,7 @@ router.post(
         options: async (rpdId, request) => {
           (lectionId = request.req.body.lectionId),
             (lectionHours = request.req.body.lectionHours),
-            await checkIsRpdLectionsUnique(rpdId, lectionId, lectionHours);
+            await checkIsRpdLectionUnique(rpdId, lectionId, lectionHours);
         },
       },
     },
@@ -408,33 +408,33 @@ router.post(
     if (!errors.isEmpty())
       return res.status(400).json({ errors: errors.array() });
     const { rpdId, lectionId, lectionHours } = req.body;
-    rpdController.addRpdLections(rpdId, lectionId, lectionHours);
+    rpdController.addRpdLection(rpdId, lectionId, lectionHours);
 
     res.send({ isAdded: true });
   }
 );
 
-router.get("/getRpdLections", async (req, res) => {
-  const result = await rpdController.getRpdLections({
+router.get("/getRpdLection", async (req, res) => {
+  const result = await rpdController.getRpdLection({
     rpdId: req.query.rpdId,
   });
 
   res.send(result);
 });
 
-router.delete("/deleteRpdLections", async (req, res) => {
+router.delete("/deleteRpdLection", async (req, res) => {
   const { rpdId } = req.query;
-  await rpdController.deleteRpdLections({
+  await rpdController.deleteRpdLection({
     rpdId,
   });
 
   res.send({ isDeleted: true });
 });
 
-router.put("/updateRpdLections", async (req, res) => {
+router.put("/updateRpdLection", async (req, res) => {
   const { rpdId, lectionId } = req.body;
 
-  const result = await rpdController.updateRpdLections({
+  const result = await rpdController.updateRpdLection({
     rpdId,
     lectionId,
   });

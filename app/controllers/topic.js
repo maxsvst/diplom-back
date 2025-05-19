@@ -1,12 +1,17 @@
 const { dataBase } = require(__dir.libs + "/dataBase");
+const { v4: uuidv4 } = require('uuid');
 
 const addTopic = async (disciplineId, topicName) => {
-  const data = {
-    disciplineId,
-    topicName,
-  };
+  try {
+    const topicId = uuidv4(); // Генерируем новый UUID
 
-  return await dataBase("Topic").insert(data);
+    await dataBase("Topic").insert({ topicId, disciplineId, topicName });
+
+    return topicId;
+  } catch (error) {
+    console.error('Error adding topic:', error);
+    throw error;
+  }
 };
 
 const getAllTopics = (data) => {
@@ -14,16 +19,17 @@ const getAllTopics = (data) => {
 };
 
 const getTopic = (data) => {
+  console.log('controller', data)
   return dataBase("Topic").select("*").where(data).first();
 };
 
-const deleteTopic = (id) => {
-  return dataBase("Topic").del().where(id);
+const deleteTopic = (topicId) => {
+  return dataBase("Topic").del().where(topicId);
 };
 
 const updateTopic = async (data) => {
-  await dataBase("Topic").where({ id: data.id }).update(data);
-  return await dataBase("Topic").where({ id: data.id }).first();
+  await dataBase("Topic").where({ topicId: data.topicId }).update(data);
+  return await dataBase("Topic").where({ topicId: data.topicId }).first();
 };
 
 module.exports = {

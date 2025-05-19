@@ -1,104 +1,190 @@
 const { dataBase } = require(__dir.libs + "/dataBase");
 
-const addDiscipline = async (
-  fullName,
-  shortName,
-  code,
-  cathedra,
-  studyField
-) => {
-  const data = {
-    fullName,
-    shortName,
-    code,
-    cathedra,
-    studyField,
-  };
+class DisciplineController {
+  async addDiscipline(fullName, shortName, code, cathedra, studyField) {
+    try {
+      const data = {
+        fullName,
+        shortName,
+        code,
+        cathedra,
+        studyField,
+      };
 
-  return await dataBase("Discipline").insert(data);
-};
+      const [disciplineId] = await dataBase("Discipline").insert(data).returning('disciplineId');
+      return await this.getDisciplineById(disciplineId);
+    } catch (error) {
+      throw new Error(`Failed to add discipline: ${error.message}`);
+    }
+  }
 
-const getAllDisciplines = () => {
-  return dataBase("Discipline").select("*");
-};
+  async getAllDisciplines() {
+    try {
+      return await dataBase("Discipline").select("*");
+    } catch (error) {
+      throw new Error(`Failed to get all disciplines: ${error.message}`);
+    }
+  }
 
-const getDiscipline = (data) => {
-  return dataBase("Discipline").select("*").where(data).first();
-};
+  // async getDiscipline(criteria) {
+  //   try {
+  //     return await dataBase("Discipline").select("*").where(criteria).first();
+  //   } catch (error) {
+  //     throw new Error(`Failed to get discipline: ${error.message}`);
+  //   }
+  // }
 
-const deleteDiscipline = (id) => {
-  return dataBase("Discipline").del().where(id);
-};
+  async getDiscipline(disciplineId) {
+    try {
+      return await this.getDiscipline({ disciplineId });
+    } catch (error) {
+      throw new Error(`Failed to get discipline by ID: ${error.message}`);
+    }
+  }
 
-const updateDiscipline = async (data) => {
-  await dataBase("Discipline").where({ id: data.id }).update(data);
-  return await dataBase("Discipline").where({ id: data.id }).first();
-};
+  async deleteDiscipline(disciplineId) {
+    try {
+      const deleted = await dataBase("Discipline")
+        .where({ disciplineId })
+        .del()
+        .returning('*');
 
-const addDisciplineTeacher = async (disciplineId, teacherId) => {
-  const data = {
-    disciplineId,
-    teacherId,
-  };
+      if (!deleted.length) {
+        throw new Error('Discipline not found');
+      }
 
-  return await dataBase("Discipline_Teacher").insert(data);
-};
+      return deleted[0];
+    } catch (error) {
+      throw new Error(`Failed to delete discipline: ${error.message}`);
+    }
+  }
 
-const getDisciplineTeacher = (data) => {
-  return dataBase("Discipline_Teacher").select("*").where(data).first();
-};
+  async updateDiscipline(data) {
+    try {
+      const { disciplineId, ...updateData } = data;
 
-const deleteDisciplineTeacher = (id) => {
-  return dataBase("Discipline_Teacher").del().where(id);
-};
+      const updated = await dataBase("Discipline")
+        .where({ disciplineId })
+        .update(updateData)
+        .returning('*');
 
-const updateDisciplineTeacher = async (data) => {
-  await dataBase("Discipline_Teacher")
-    .where({ disciplineId: data.disciplineId })
-    .update(data);
-  return await dataBase("Discipline_Teacher")
-    .where({ disciplineId: data.disciplineId })
-    .first();
-};
+      if (!updated.length) {
+        throw new Error('Discipline not found');
+      }
 
-const addDisciplineCompetence = async (disciplineId, competenceId) => {
-  const data = {
-    disciplineId,
-    competenceId,
-  };
+      return updated[0];
+    } catch (error) {
+      throw new Error(`Failed to update discipline: ${error.message}`);
+    }
+  }
 
-  return await dataBase("Discipline_Competence").insert(data);
-};
+  async addDisciplineTeacher(disciplineId, teacherId) {
+    try {
+      const data = { disciplineId, teacherId };
+      const [id] = await dataBase("Discipline_Teacher").insert(data).returning('id');
+      return await this.getDisciplineTeacher({ id });
+    } catch (error) {
+      throw new Error(`Failed to add discipline teacher: ${error.message}`);
+    }
+  }
 
-const getDisciplineCompetence = (data) => {
-  return dataBase("Discipline_Competence").select("*").where(data);
-};
+  async getDisciplineTeacher(criteria) {
+    try {
+      return await dataBase("Discipline_Teacher").select("*").where(criteria).first();
+    } catch (error) {
+      throw new Error(`Failed to get discipline teacher: ${error.message}`);
+    }
+  }
 
-const deleteDisciplineCompetence = (id) => {
-  return dataBase("Discipline_Competence").del().where(id);
-};
+  async deleteDisciplineTeacher(disciplineId) {
+    try {
+      const deleted = await dataBase("Discipline_Teacher")
+        .where({ disciplineId })
+        .del()
+        .returning('*');
 
-const updateDisciplineCompetence = async (data) => {
-  await dataBase("Discipline_Competence")
-    .where({ disciplineId: data.disciplineId })
-    .update(data);
-  return await dataBase("Discipline_Competence")
-    .where({ disciplineId: data.disciplineId })
-    .first();
-};
+      if (!deleted.length) {
+        throw new Error('Discipline teacher not found');
+      }
 
-module.exports = {
-  addDiscipline,
-  getAllDisciplines,
-  getDiscipline,
-  deleteDiscipline,
-  updateDiscipline,
-  addDisciplineTeacher,
-  getDisciplineTeacher,
-  deleteDisciplineTeacher,
-  updateDisciplineTeacher,
-  addDisciplineCompetence,
-  getDisciplineCompetence,
-  deleteDisciplineCompetence,
-  updateDisciplineCompetence,
-};
+      return deleted[0];
+    } catch (error) {
+      throw new Error(`Failed to delete discipline teacher: ${error.message}`);
+    }
+  }
+
+  async updateDisciplineTeacher(data) {
+    try {
+      const { disciplineId, ...updateData } = data;
+
+      const updated = await dataBase("Discipline_Teacher")
+        .where({ disciplineId })
+        .update(updateData)
+        .returning('*');
+
+      if (!updated.length) {
+        throw new Error('Discipline teacher not found');
+      }
+
+      return updated[0];
+    } catch (error) {
+      throw new Error(`Failed to update discipline teacher: ${error.message}`);
+    }
+  }
+
+  async addDisciplineCompetence(disciplineId, competenceId) {
+    try {
+      const data = { disciplineId, competenceId };
+      const [id] = await dataBase("Discipline_Competence").insert(data).returning('id');
+      return await this.getDisciplineCompetence({ id });
+    } catch (error) {
+      throw new Error(`Failed to add discipline competence: ${error.message}`);
+    }
+  }
+
+  async getDisciplineCompetence(criteria) {
+    try {
+      return await dataBase("Discipline_Competence").select("*").where(criteria);
+    } catch (error) {
+      throw new Error(`Failed to get discipline competence: ${error.message}`);
+    }
+  }
+
+  async deleteDisciplineCompetence(disciplineId) {
+    try {
+      const deleted = await dataBase("Discipline_Competence")
+        .where({ disciplineId })
+        .del()
+        .returning('*');
+
+      if (!deleted.length) {
+        throw new Error('Discipline competence not found');
+      }
+
+      return deleted[0];
+    } catch (error) {
+      throw new Error(`Failed to delete discipline competence: ${error.message}`);
+    }
+  }
+
+  async updateDisciplineCompetence(data) {
+    try {
+      const { disciplineId, ...updateData } = data;
+
+      const updated = await dataBase("Discipline_Competence")
+        .where({ disciplineId })
+        .update(updateData)
+        .returning('*');
+
+      if (!updated.length) {
+        throw new Error('Discipline competence not found');
+      }
+
+      return updated[0];
+    } catch (error) {
+      throw new Error(`Failed to update discipline competence: ${error.message}`);
+    }
+  }
+}
+
+module.exports = new DisciplineController();

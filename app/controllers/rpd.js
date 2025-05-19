@@ -125,27 +125,27 @@ const updateRpdPracticalClass = async (data) => {
     .first();
 };
 
-const addRpdLections = async (rpdId, lectionId, lectionHours) => {
+const addRpdLection = async (rpdId, lectionId, lectionHours) => {
   const data = {
     rpdId,
     lectionId,
     lectionHours,
   };
 
-  return await dataBase("Rpd_Lections").insert(data);
+  return await dataBase("Rpd_Lection").insert(data);
 };
 
-const getRpdLections = (data) => {
-  return dataBase("Rpd_Lections").select("*").where(data).first();
+const getRpdLection = (data) => {
+  return dataBase("Rpd_Lection").select("*").where(data).first();
 };
 
-const deleteRpdLections = (id) => {
-  return dataBase("Rpd_Lections").del().where(id);
+const deleteRpdLection = (id) => {
+  return dataBase("Rpd_Lection").del().where(id);
 };
 
-const updateRpdLections = async (data) => {
-  await dataBase("Rpd_Lections").where({ rpdId: data.rpdId }).update(data);
-  return await dataBase("Rpd_Lections").where({ rpdId: data.rpdId }).first();
+const updateRpdLection = async (data) => {
+  await dataBase("Rpd_Lection").where({ rpdId: data.rpdId }).update(data);
+  return await dataBase("Rpd_Lection").where({ rpdId: data.rpdId }).first();
 };
 
 const addRpdTopic = async (
@@ -205,10 +205,10 @@ module.exports = {
   getRpdPracticalClass,
   deleteRpdPracticalClass,
   updateRpdPracticalClass,
-  addRpdLections,
-  getRpdLections,
-  deleteRpdLections,
-  updateRpdLections,
+  addRpdLection,
+  getRpdLection,
+  deleteRpdLection,
+  updateRpdLection,
   addRpdTopic,
   getRpdTopic,
   getAllRpdTopicByRpdId,
