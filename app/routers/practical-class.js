@@ -54,16 +54,12 @@ router.get("/get-all-practical-classes", async (req, res) => {
 
 router.get(
   "/get-practical-class",
-  // checkSchema({
-  //   practicalClassName: {
-  //     isString: true,
-  //     isLength: {
-  //       options: {
-  //         min: 1,
-  //       },
-  //     },
-  //   },
-  // }),
+  checkSchema({
+    practicalClassId: {
+      isUUID: true,
+      errorMessage: 'practicalClassId must be a valid UUID v4',
+    },
+  }),
   async (req, res) => {
     const errors = validationResult(req);
     console.log(errors);

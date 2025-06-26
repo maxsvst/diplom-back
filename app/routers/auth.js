@@ -50,10 +50,11 @@ router.post('/login', async (req, res) => {
             {
                 teacherId: existingUser.teacherId,
                 email: existingUser.email,
-                fullName: existingUser.fullName
+                fullName: existingUser.fullName,
+                rank: existingUser.rank
             },
             process.env.ACCESS_TOKEN_SECRET,
-            { expiresIn: '1h' }
+            { expiresIn: '7d' }
         );
 
         const newRefreshToken = jwt.sign(

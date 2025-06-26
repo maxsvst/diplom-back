@@ -59,13 +59,9 @@ router.get("/get-all-laboratory-classes", async (req, res) => {
 router.get(
   "/get-laboratory-class",
   checkSchema({
-    laboratoryClassName: {
-      isString: true,
-      isLength: {
-        options: {
-          min: 1,
-        },
-      },
+    laboratoryClassId: {
+      isUUID: true,
+      errorMessage: 'laboratoryClassId must be a valid UUID v4',
     },
   }),
   async (req, res) => {
@@ -74,7 +70,7 @@ router.get(
     if (!errors.isEmpty())
       return res.status(400).json({ errors: errors.array() });
     const result = await laboratoryClassController.getLaboratoryClass({
-      laboratoryClassName: req.query.laboratoryClassName,
+      laboratoryClassId: req.query.laboratoryClassId,
     });
 
     res.send(result);

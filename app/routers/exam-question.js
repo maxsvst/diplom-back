@@ -9,10 +9,10 @@ const router = new Router();
 router.post(
   "/add-exam-question",
   checkSchema({
-    // topicId: {
-    //   isNumeric: { min: 0 },
-    // },
-
+    topicId: {
+      isUUID: true,
+      errorMessage: 'topicId must be a valid UUID v4',
+    },
     examQuestionName: {
       isString: true,
       isLength: {

@@ -123,9 +123,9 @@ router.get("/get-all-competences", async (req, res) => {
 });
 
 router.get("/get-competence", async (req, res) => {
-  const { id } = req.query;
-  const result = await competenceController.getCompetences({
-    id,
+  const { competenceId } = req.query;
+  const result = await competenceController.getCompetence({
+    competenceId,
   });
 
   res.send(result);

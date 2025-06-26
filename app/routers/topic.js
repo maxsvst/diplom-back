@@ -47,11 +47,59 @@ router.post(
   }
 );
 
+router.post(
+  "/add-topics",
+  checkSchema({
+    disciplineId: {
+      isUUID: true,
+      errorMessage: 'disciplineId must be a valid UUID v4',
+    },
+    topics: {
+      isArray: true,
+      errorMessage: 'topics must be an array',
+      notEmpty: true,
+      custom: {
+        options: async (topics, { req }) => {
+          const disciplineId = req.body.disciplineId;
+          for (const topicName of topics) {
+            if (typeof topicName !== 'string' || topicName.length < 1) {
+              throw new Error('topicName must be a non-empty string'); // Валидация внутри массива
+            }
+            await checkIsTopicInDisciplineExist(disciplineId, topicName);
+          }
+        },
+      },
+    },
+  }),
+  async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
+
+    const { disciplineId, topics } = req.body;
+
+    try {
+      const topicIds = []; // Массив для хранения ID добавленных тем
+      for (const topicName of topics) {
+        const topicId = await topicController.addTopic(disciplineId, topicName);
+        topicIds.push(topicId);
+      }
+      res.status(201).json({ topicIds, isAdded: true }); // Возвращаем массив ID
+    } catch (error) {
+      console.error("Error in /add-topics route:", error);
+      res.status(500).json({ error: "Failed to add topics" });
+    }
+  }
+);
+
 router.get(
   "/get-all-topics",
   checkSchema({
-    isUUID: { options: { version: '4' } },
-    errorMessage: 'disciplineId must be a valid UUID v4',
+    disciplineId: {
+      isUUID: true,
+      errorMessage: 'disciplineId must be a valid UUID v4',
+    },
   }),
   async (req, res) => {
     const errors = validationResult(req);

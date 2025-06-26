@@ -1,20 +1,29 @@
 const { dataBase } = require(__dir.libs + "/dataBase");
+const { v4: uuidv4 } = require('uuid');
 
 class DisciplineController {
-  async addDiscipline(fullName, shortName, code, cathedra, studyField) {
-    try {
-      const data = {
-        fullName,
-        shortName,
-        code,
-        cathedra,
-        studyField,
-      };
+  async addDiscipline(fullName,
+    code,
+    profileName,
+    studyField,
+    studyFieldCode) {
 
-      const [disciplineId] = await dataBase("Discipline").insert(data).returning('disciplineId');
-      return await this.getDisciplineById(disciplineId);
+    try {
+      const disciplineId = uuidv4(); // Генерируем новый UUID
+
+      await dataBase("Discipline").insert({
+        disciplineId,
+        fullName,
+        code,
+        profileName,
+        studyField,
+        studyFieldCode
+      });
+
+      return disciplineId;
     } catch (error) {
-      throw new Error(`Failed to add discipline: ${error.message}`);
+      console.error('Error adding discipline:', error);
+      throw error;
     }
   }
 
@@ -34,12 +43,8 @@ class DisciplineController {
   //   }
   // }
 
-  async getDiscipline(disciplineId) {
-    try {
-      return await this.getDiscipline({ disciplineId });
-    } catch (error) {
-      throw new Error(`Failed to get discipline by ID: ${error.message}`);
-    }
+  async getDiscipline(data) {
+    return dataBase("Discipline").select("*").where(data).first();
   }
 
   async deleteDiscipline(disciplineId) {

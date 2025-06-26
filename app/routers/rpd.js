@@ -16,6 +16,10 @@ const router = new Router();
 router.post(
   "/add-rpd",
   checkSchema({
+    disciplineId: {
+      isUUID: true,
+      errorMessage: 'disciplineId must be a valid UUID v4',
+    },
     // disciplineId: {
     //   isNumeric: { min: 0 },
     //   custom: {
@@ -61,15 +65,16 @@ router.post(
     rpdAdditionalHours: {
       isNumeric: { min: 0 },
     },
-    year: {
-      isNumeric: { min: 0 },
-    },
+    // rpdDate: {
+    //   isDate:{},
+    // },
   }),
-  (req, res) => {
+  async (req, res) => {
     const errors = validationResult(req);
-    console.log(errors);
+
     if (!errors.isEmpty())
       return res.status(400).json({ errors: errors.array() });
+
     const {
       disciplineId,
       rpdTotalHours,
@@ -78,30 +83,52 @@ router.post(
       rpdLaboratoryHours,
       rpdSelfstudyHours,
       rpdAdditionalHours,
-      year,
-    } = req.body;
-    rpdController.addRpd(
-      disciplineId,
-      rpdTotalHours,
-      rpdLectionHours,
-      rpdPracticalHours,
-      rpdLaboratoryHours,
-      rpdSelfstudyHours,
-      rpdAdditionalHours,
-      year
-    );
+      rpdDate,
+      controlWeek,
+      course,
+      semester,
+      creditUnits,
+      controlWork,
+      courseProject,
+      credit,
+      exam,
 
-    res.send({ isAdded: true });
+    } = req.body;
+    try {
+      const rpdId = await rpdController.addRpd(
+        disciplineId,
+        rpdTotalHours,
+        rpdLectionHours,
+        rpdPracticalHours,
+        rpdLaboratoryHours,
+        rpdSelfstudyHours,
+        rpdAdditionalHours,
+        rpdDate,
+        controlWeek,
+        course,
+        semester,
+        creditUnits,
+        controlWork,
+        courseProject,
+        credit,
+        exam,
+      );
+      res.status(201).json({ rpdId, isAdded: true });
+    } catch (error) {
+      console.error("Error in /add-rpd route:", error);
+      res.status(500).json({ error: "Failed to add rpd" });
+    }
   }
 );
 
 router.get(
   "/get-rpd",
-  // checkSchema({
-  //   id: {
-  //     isNumeric: { min: 0 },
-  //   },
-  // }),
+  checkSchema({
+    rpdId: {
+      isUUID: true,
+      errorMessage: 'rpdId must be a valid UUID v4',
+    },
+  }),
   async (req, res) => {
     const errors = validationResult(req);
     console.log(errors);
@@ -119,7 +146,8 @@ router.get(
   "/getUniqueRpd",
   checkSchema({
     disciplineId: {
-      isNumeric: { min: 0 },
+      isUUID: true,
+      errorMessage: 'disciplineId must be a valid UUID v4',
     },
     rpdTotalHours: {
       isNumeric: { min: 0 },
@@ -187,19 +215,21 @@ router.put("/update-rpd", async (req, res) => {
 });
 
 router.post(
-  "/addRpdCompetence",
+  "/add-rpd-competence",
   checkSchema({
     rpdId: {
-      isNumeric: { min: 0 },
-      custom: {
-        options: async (rpdId, request) => {
-          (competenceId = request.req.body.competenceId),
-            await checkIsRpdCompetenceUnique(rpdId, competenceId);
-        },
-      },
+      isUUID: true,
+      errorMessage: 'rpdId must be a valid UUID v4',
+      // custom: {
+      //   options: async (rpdId, request) => {
+      //     (competenceId = request.req.body.competenceId),
+      //       await checkIsRpdCompetenceUnique(rpdId, competenceId);
+      //   },
+      // },
     },
     competenceId: {
-      isNumeric: { min: 0 },
+      isUUID: true,
+      errorMessage: 'competenceId must be a valid UUID v4',
     },
   }),
   (req, res) => {
@@ -214,7 +244,7 @@ router.post(
   }
 );
 
-router.get("/getAllRpdCompetence", async (req, res) => {
+router.get("/get-all-rpd-competence", async (req, res) => {
   const result = await rpdController.getAllRpdCompetence({
     rpdId: req.query.rpdId,
   });
@@ -222,7 +252,7 @@ router.get("/getAllRpdCompetence", async (req, res) => {
   res.send(result);
 });
 
-router.get("/getRpdCompetence", async (req, res) => {
+router.get("/get-rpd-competence", async (req, res) => {
   const result = await rpdController.getRpdCompetence({
     rpdId: req.query.rpdId,
   });
@@ -230,7 +260,7 @@ router.get("/getRpdCompetence", async (req, res) => {
   res.send(result);
 });
 
-router.delete("/deleteRpdCompetence", async (req, res) => {
+router.delete("/delete-rpd-competence", async (req, res) => {
   const { rpdId } = req.query;
   await rpdController.deleteRpdCompetence({
     rpdId,
@@ -239,7 +269,7 @@ router.delete("/deleteRpdCompetence", async (req, res) => {
   res.send({ isDeleted: true });
 });
 
-router.put("/updateRpdCompetence", async (req, res) => {
+router.put("/update-rpd-competence", async (req, res) => {
   const { rpdId, competenceId } = req.body;
 
   const result = await rpdController.updateRpdCompetence({
@@ -251,24 +281,26 @@ router.put("/updateRpdCompetence", async (req, res) => {
 });
 
 router.post(
-  "/addRpdLaboratoryClass",
+  "/add-rpd-laboratory-class",
   checkSchema({
     rpdId: {
-      isNumeric: { min: 0 },
-      custom: {
-        options: async (rpdId, request) => {
-          (laboratoryClassId = request.req.body.laboratoryClassId),
-            (laboratoryHours = request.req.body.laboratoryHours),
-            await checkIsRpdLaboratoryClassUnique(
-              rpdId,
-              laboratoryClassId,
-              laboratoryHours
-            );
-        },
-      },
+      isUUID: true,
+      errorMessage: 'rpdId must be a valid UUID v4',
+      // custom: {
+      //   options: async (rpdId, request) => {
+      //     (laboratoryClassId = request.req.body.laboratoryClassId),
+      //       (laboratoryHours = request.req.body.laboratoryHours),
+      //       await checkIsRpdLaboratoryClassUnique(
+      //         rpdId,
+      //         laboratoryClassId,
+      //         laboratoryHours
+      //       );
+      //   },
+      // },
     },
     laboratoryClassId: {
-      isNumeric: { min: 0 },
+      isUUID: true,
+      errorMessage: 'laboratoryClassId must be a valid UUID v4',
     },
     laboratoryHours: {
       isNumeric: { min: 0 },
@@ -290,7 +322,15 @@ router.post(
   }
 );
 
-router.get("/getRpdLaboratoryClass", async (req, res) => {
+router.get("/get-all-rpd-laboratory-class", async (req, res) => {
+  const result = await rpdController.getAllRpdLaboratoryClass({
+    rpdId: req.query.rpdId,
+  });
+
+  res.send(result);
+});
+
+router.get("/get-rpd-laboratory-class", async (req, res) => {
   const result = await rpdController.getRpdLaboratoryClass({
     rpdId: req.query.rpdId,
   });
@@ -298,7 +338,7 @@ router.get("/getRpdLaboratoryClass", async (req, res) => {
   res.send(result);
 });
 
-router.delete("/deleteRpdLaboratoryClass", async (req, res) => {
+router.delete("/delete-rpd-laboratory-class", async (req, res) => {
   const { rpdId } = req.query;
   await rpdController.deleteRpdLaboratoryClass({
     rpdId,
@@ -307,7 +347,7 @@ router.delete("/deleteRpdLaboratoryClass", async (req, res) => {
   res.send({ isDeleted: true });
 });
 
-router.put("/updateRpdLaboratoryClass", async (req, res) => {
+router.put("/update-rpd-laboratory-class", async (req, res) => {
   const { rpdId, laboratoryClassId } = req.body;
 
   const result = await rpdController.updateRpdLaboratoryClass({
@@ -319,24 +359,26 @@ router.put("/updateRpdLaboratoryClass", async (req, res) => {
 });
 
 router.post(
-  "/addRpdPracticalClass",
+  "/add-rpd-practical-class",
   checkSchema({
     rpdId: {
-      isNumeric: { min: 0 },
-      custom: {
-        options: async (rpdId, request) => {
-          (practicalClassId = request.req.body.practicalClassId),
-            (practicalHours = request.req.body.practicalHours),
-            await checkIsRpdPracticalClassUnique(
-              rpdId,
-              practicalClassId,
-              practicalHours
-            );
-        },
-      },
+      isUUID: true,
+      errorMessage: 'rpdId must be a valid UUID v4',
+      // custom: {
+      //   options: async (rpdId, request) => {
+      //     (practicalClassId = request.req.body.practicalClassId),
+      //       (practicalHours = request.req.body.practicalHours),
+      //       await checkIsRpdPracticalClassUnique(
+      //         rpdId,
+      //         practicalClassId,
+      //         practicalHours
+      //       );
+      //   },
+      // },
     },
     practicalClassId: {
-      isNumeric: { min: 0 },
+      isUUID: true,
+      errorMessage: 'practicalClassId must be a valid UUID v4',
     },
     practicalHours: {
       isNumeric: { min: 0 },
@@ -354,7 +396,15 @@ router.post(
   }
 );
 
-router.get("/getRpdPracticalClass", async (req, res) => {
+router.get("/get-all-rpd-practical-class", async (req, res) => {
+  const result = await rpdController.getAllRpdPracticalClass({
+    rpdId: req.query.rpdId,
+  });
+
+  res.send(result);
+});
+
+router.get("/get-rpd-practical-class", async (req, res) => {
   const result = await rpdController.getRpdPracticalClass({
     rpdId: req.query.rpdId,
   });
@@ -362,7 +412,7 @@ router.get("/getRpdPracticalClass", async (req, res) => {
   res.send(result);
 });
 
-router.delete("/deleteRpdPracticalClass", async (req, res) => {
+router.delete("/delete-rpd-practical-class", async (req, res) => {
   const { rpdId } = req.query;
   await rpdController.deleteRpdPracticalClass({
     rpdId,
@@ -371,7 +421,7 @@ router.delete("/deleteRpdPracticalClass", async (req, res) => {
   res.send({ isDeleted: true });
 });
 
-router.put("/updateRpdPracticalClass", async (req, res) => {
+router.put("/update-rpd-practical-class", async (req, res) => {
   const { rpdId, practicalClassId } = req.body;
 
   const result = await rpdController.updateRpdPracticalClass({
@@ -383,20 +433,22 @@ router.put("/updateRpdPracticalClass", async (req, res) => {
 });
 
 router.post(
-  "/addRpdLection",
+  "/add-rpd-lection",
   checkSchema({
     rpdId: {
-      isNumeric: { min: 0 },
-      custom: {
-        options: async (rpdId, request) => {
-          (lectionId = request.req.body.lectionId),
-            (lectionHours = request.req.body.lectionHours),
-            await checkIsRpdLectionUnique(rpdId, lectionId, lectionHours);
-        },
-      },
+      isUUID: true,
+      errorMessage: 'rpdId must be a valid UUID v4',
+      // custom: {
+      //   options: async (rpdId, request) => {
+      //     (lectionId = request.req.body.lectionId),
+      //       (lectionHours = request.req.body.lectionHours),
+      //       await checkIsRpdLectionUnique(rpdId, lectionId, lectionHours);
+      //   },
+      // },
     },
     lectionId: {
-      isNumeric: { min: 0 },
+      isUUID: true,
+      errorMessage: 'lectionId must be a valid UUID v4',
     },
     lectionHours: {
       isNumeric: { min: 0 },
@@ -414,7 +466,15 @@ router.post(
   }
 );
 
-router.get("/getRpdLection", async (req, res) => {
+router.get("/get-all-rpd-lection", async (req, res) => {
+  const result = await rpdController.getAllRpdLection({
+    rpdId: req.query.rpdId,
+  });
+
+  res.send(result);
+});
+
+router.get("/get-rpd-lection", async (req, res) => {
   const result = await rpdController.getRpdLection({
     rpdId: req.query.rpdId,
   });
@@ -422,7 +482,7 @@ router.get("/getRpdLection", async (req, res) => {
   res.send(result);
 });
 
-router.delete("/deleteRpdLection", async (req, res) => {
+router.delete("/delete-rpd-lection", async (req, res) => {
   const { rpdId } = req.query;
   await rpdController.deleteRpdLection({
     rpdId,
@@ -431,7 +491,7 @@ router.delete("/deleteRpdLection", async (req, res) => {
   res.send({ isDeleted: true });
 });
 
-router.put("/updateRpdLection", async (req, res) => {
+router.put("/update-rpd-lection", async (req, res) => {
   const { rpdId, lectionId } = req.body;
 
   const result = await rpdController.updateRpdLection({
@@ -443,33 +503,35 @@ router.put("/updateRpdLection", async (req, res) => {
 });
 
 router.post(
-  "/addRpdTopic",
+  "/add-rpd-topic",
   checkSchema({
     rpdId: {
-      isNumeric: { min: 0 },
-      custom: {
-        options: async (rpdId, request) => {
-          (topicId = request.req.body.topicId),
-            (topicTotalHours = request.req.body.topicTotalHours),
-            (topicTotalHours = request.req.body.topicTotalHours),
-            (topicLectionHours = request.req.body.topicLectionHours),
-            (topicPracticalHours = request.req.body.topicPracticalHours),
-            (topicLaboratoryHours = request.req.body.topicLaboratoryHours),
-            (topicSelfstudyHours = request.req.body.topicSelfstudyHours),
-            await checkIsRpdTopicUnique(
-              rpdId,
-              topicId,
-              topicTotalHours,
-              topicLectionHours,
-              topicPracticalHours,
-              topicLaboratoryHours,
-              topicSelfstudyHours
-            );
-        },
-      },
+      isUUID: true,
+      errorMessage: 'rpdId must be a valid UUID v4',
+      // custom: {
+      //   options: async (rpdId, request) => {
+      //     (topicId = request.req.body.topicId),
+      //       (topicTotalHours = request.req.body.topicTotalHours),
+      //       (topicTotalHours = request.req.body.topicTotalHours),
+      //       (topicLectionHours = request.req.body.topicLectionHours),
+      //       (topicPracticalHours = request.req.body.topicPracticalHours),
+      //       (topicLaboratoryHours = request.req.body.topicLaboratoryHours),
+      //       (topicSelfstudyHours = request.req.body.topicSelfstudyHours),
+      //       await checkIsRpdTopicUnique(
+      //         rpdId,
+      //         topicId,
+      //         topicTotalHours,
+      //         topicLectionHours,
+      //         topicPracticalHours,
+      //         topicLaboratoryHours,
+      //         topicSelfstudyHours
+      //       );
+      //   },
+      // },
     },
     topicId: {
-      isNumeric: { min: 0 },
+      isUUID: true,
+      errorMessage: 'topicId must be a valid UUID v4',
     },
     topicTotalHours: {
       isNumeric: { min: 0 },
@@ -515,7 +577,7 @@ router.post(
   }
 );
 
-router.get("/getRpdTopic", async (req, res) => {
+router.get("/get-rpd-topic", async (req, res) => {
   const result = await rpdController.getRpdTopic({
     rpdId: req.query.rpdId,
   });
@@ -523,15 +585,15 @@ router.get("/getRpdTopic", async (req, res) => {
   res.send(result);
 });
 
-router.get("/getAllRpdTopicByRpdId", async (req, res) => {
-  const result = await rpdController.getAllRpdTopicByRpdId({
+router.get("/get-all-rpd-topic", async (req, res) => {
+  const result = await rpdController.getAllRpdTopic({
     rpdId: req.query.rpdId,
   });
 
   res.send(result);
 });
 
-router.delete("/deleteRpdTopic", async (req, res) => {
+router.delete("/delete-rpd-topic", async (req, res) => {
   const { rpdId } = req.query;
   await rpdController.deleteRpdTopic({
     rpdId,
@@ -540,7 +602,7 @@ router.delete("/deleteRpdTopic", async (req, res) => {
   res.send({ isDeleted: true });
 });
 
-router.put("/updateRpdTopic", async (req, res) => {
+router.put("/update-rpd-topic", async (req, res) => {
   const {
     rpdId,
     topicId,

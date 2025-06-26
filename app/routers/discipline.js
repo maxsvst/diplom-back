@@ -22,25 +22,25 @@ const disciplineSchema = {
       },
     },
   },
-  shortName: {
-    isString: true,
-    isLength: {
-      options: { min: 1 },
-    },
-  },
   code: {
     isString: true,
     isLength: {
       options: { min: 1 },
     },
   },
-  cathedra: {
+  profileName: {
     isString: true,
     isLength: {
       options: { min: 1 },
     },
   },
   studyField: {
+    isString: true,
+    isLength: {
+      options: { min: 1 },
+    },
+  },
+  studyFieldCode: {
     isString: true,
     isLength: {
       options: { min: 1 },
@@ -63,18 +63,26 @@ router.post(
   checkSchema(disciplineSchema),
   handleValidationErrors,
   async (req, res) => {
+    const {
+      fullName,
+      code,
+      profileName,
+      studyField,
+      studyFieldCode
+    } = req.body;
+
     try {
-      const { fullName, shortName, code, cathedra, studyField } = req.body;
-      const discipline = await disciplineController.addDiscipline(
+      const disciplineId = await disciplineController.addDiscipline(
         fullName,
-        shortName,
         code,
-        cathedra,
-        studyField
+        profileName,
+        studyField,
+        studyFieldCode
       );
-      res.status(201).json(discipline);
+      res.status(201).json({ disciplineId, isAdded: true });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      console.error("Error in /addCompetence route:", error);
+      res.status(500).json({ error: "Failed to add discipline" });
     }
   }
 );
@@ -114,17 +122,22 @@ router.get("/get-all-disciplines", async (req, res) => {
 
 router.get(
   "/get-discipline",
-  handleValidationErrors,
+  checkSchema({
+    disciplineId: {
+      isUUID: true,
+      errorMessage: 'disciplineId must be a valid UUID v4',
+    },
+  }),
   async (req, res) => {
-    try {
-      const discipline = await disciplineController.getDiscipline(req.query.disciplineId);
-      if (!discipline) {
-        return res.status(404).json({ error: "Дисциплина не найдена" });
-      }
-      res.json(discipline);
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
+    const errors = validationResult(req);
+    console.log(errors);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
+    const result = await disciplineController.getDiscipline({
+      disciplineId: req.query.disciplineId,
+    });
+
+    res.send(result);
   }
 );
 
@@ -134,7 +147,7 @@ router.delete(
   handleValidationErrors,
   async (req, res) => {
     try {
-      await disciplineController.deleteDiscipline(req.query.id);
+      await disciplineController.deleteDiscipline(req.query.disciplineId);
       res.json({ message: "Дисциплина успешно удалена" });
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -162,10 +175,16 @@ router.put(
 // Discipline Teacher routes
 router.post(
   "/add-discipline-teacher",
-  // checkSchema({
-  //   disciplineId: { isNumeric: { min: 0 } },
-  //   teacherId: { isNumeric: { min: 0 } },
-  // }),
+  checkSchema({
+    disciplineId: {
+      isUUID: true,
+      errorMessage: 'disciplineId must be a valid UUID v4',
+    },
+    teacherId: {
+      isUUID: true,
+      errorMessage: 'teacherId must be a valid UUID v4',
+    },
+  }),
   handleValidationErrors,
   async (req, res) => {
     try {
@@ -180,9 +199,12 @@ router.post(
 
 router.get(
   "/get-discipline-teacher",
-  // checkSchema({
-  //   disciplineId: { isNumeric: { min: 0 } },
-  // }),
+  checkSchema({
+    disciplineId: {
+      isUUID: true,
+      errorMessage: 'disciplineId must be a valid UUID v4',
+    },
+  }),
   handleValidationErrors,
   async (req, res) => {
     try {
@@ -201,9 +223,12 @@ router.get(
 
 router.delete(
   "/delete-discipline-teacher",
-  // checkSchema({
-  //   disciplineId: { isNumeric: { min: 0 } },
-  // }),
+  checkSchema({
+    disciplineId: {
+      isUUID: true,
+      errorMessage: 'disciplineId must be a valid UUID v4',
+    },
+  }),
   handleValidationErrors,
   async (req, res) => {
     try {
@@ -217,10 +242,16 @@ router.delete(
 
 router.put(
   "/update-discipline-teacher",
-  // checkSchema({
-  //   disciplineId: { isNumeric: { min: 0 } },
-  //   teacherId: { isNumeric: { min: 0 } },
-  // }),
+  checkSchema({
+    disciplineId: {
+      isUUID: true,
+      errorMessage: 'disciplineId must be a valid UUID v4',
+    },
+    teacherId: {
+      isUUID: true,
+      errorMessage: 'teacherId must be a valid UUID v4',
+    },
+  }),
   handleValidationErrors,
   async (req, res) => {
     try {
@@ -235,18 +266,22 @@ router.put(
 // Discipline Competence routes
 router.post(
   "/add-discipline-competence",
-  // checkSchema({
-  //   disciplineId: {
-  //     isNumeric: { min: 0 },
-  //     custom: {
-  //       options: async (disciplineId, request) => {
-  //         const competenceId = request.req.body.competenceId;
-  //         await checkIsDisciplineCompetenceUnique(disciplineId, competenceId);
-  //       },
-  //     },
-  //   },
-  //   competenceId: { isNumeric: { min: 0 } },
-  // }),
+  checkSchema({
+    disciplineId: {
+      isUUID: true,
+      errorMessage: 'disciplineId must be a valid UUID v4',
+      // custom: {
+      //   options: async (disciplineId, request) => {
+      //     const competenceId = request.req.body.competenceId;
+      //     await checkIsDisciplineCompetenceUnique(disciplineId, competenceId);
+      //   },
+      // },
+    },
+    competenceId: {
+      isUUID: true,
+      errorMessage: 'competenceId must be a valid UUID v4',
+    },
+  }),
   handleValidationErrors,
   async (req, res) => {
     try {

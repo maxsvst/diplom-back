@@ -20,8 +20,12 @@ const lectionRouter = require(__dir.routers + "/lection");
 const practicalClassRouter = require(__dir.routers + "/practical-class");
 const rpdRouter = require(__dir.routers + "/rpd");
 const topicRouter = require(__dir.routers + "/topic");
+const purposeRouter = require(__dir.routers + "/purpose");
+const objectiveRouter = require(__dir.routers + "/objective");
 const documentRouter = require(__dir.routers + "/create-document");
 const authRouter = require(__dir.routers + "/auth");
+const ollamaRouter = require(__dir.routers + "/ollama");
+const xlsxParser = require(__dir.routers + "/xlsxParser");
 
 const app = Express();
 const PORT = process.env.PORT || 8080;
@@ -48,8 +52,12 @@ app.use("/lection", lectionRouter);
 app.use("/practical-class", practicalClassRouter);
 app.use("/rpd", rpdRouter);
 app.use("/topic", topicRouter);
+app.use("/purpose", purposeRouter);
+app.use("/objective", objectiveRouter);
 app.use("/document", documentRouter);
 app.use("/auth", authRouter);
+app.use("/ollama", ollamaRouter);
+app.use("/xlsx", xlsxParser);
 
 const start = async () => {
   try {

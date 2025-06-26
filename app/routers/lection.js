@@ -9,9 +9,10 @@ const router = new Router();
 router.post(
   "/add-lection",
   checkSchema({
-    // topicId: {
-    //   isNumeric: { min: 0 },
-    // },
+    topicId: {
+      isUUID: true,
+      errorMessage: 'topicId must be a valid UUID v4',
+    },
     lectionName: {
       isString: true,
       isLength: {
@@ -51,13 +52,9 @@ router.get("/get-all-lections", async (req, res) => {
 router.get(
   "/get-lection",
   checkSchema({
-    lectionName: {
-      isString: true,
-      isLength: {
-        options: {
-          min: 1,
-        },
-      },
+    lectionId: {
+      isUUID: true,
+      errorMessage: 'lectionId must be a valid UUID v4',
     },
   }),
   async (req, res) => {
@@ -66,7 +63,7 @@ router.get(
     if (!errors.isEmpty())
       return res.status(400).json({ errors: errors.array() });
     const result = await lectionController.getLection({
-      lectionName: req.query.lectionName,
+      lectionId: req.query.lectionId,
     });
 
     res.send(result);

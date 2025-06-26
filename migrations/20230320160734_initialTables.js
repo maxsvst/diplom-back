@@ -1,4 +1,6 @@
 exports.up = async function (knex) {
+  await knex.raw('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";');
+
   await knex.schema.createTable("Teacher", function (table) {
     table.uuid('teacherId').primary().defaultTo(knex.raw('uuid_generate_v4()'));
     table.string("fullName").unique().notNullable();
@@ -16,22 +18,22 @@ exports.up = async function (knex) {
       "ROLE_ADMIN",
       "ROLE_USER",
     ]).defaultTo("ROLE_USER")
-    table.string("refreshToken").notNullable();
+    table.string("refreshToken");
   });
 
   await knex.schema.createTable("Discipline", function (table) {
     table.uuid('disciplineId').primary().defaultTo(knex.raw('uuid_generate_v4()'));
     table.string("fullName").unique().notNullable();
-    table.string("shortName").notNullable();
     table.string("code").notNullable();
-    table.string("cathedra").notNullable();
+    table.string("profileName").notNullable();
     table.string("studyField").notNullable();
+    table.string("studyFieldCode").notNullable();
   });
 
-  await knex.schema.createTable("DisciplinePurpose", function (table) {
-    table.uuid('disciplinePurposeId').primary().defaultTo(knex.raw('uuid_generate_v4()'));
+  await knex.schema.createTable("Purpose", function (table) {
+    table.uuid('purposeId').primary().defaultTo(knex.raw('uuid_generate_v4()'));
     table.uuid("disciplineId").notNullable();
-    table.string("disciplinePurposeName").notNullable();
+    table.string("purposeName").notNullable();
 
     table
       .foreign("disciplineId")
@@ -41,10 +43,10 @@ exports.up = async function (knex) {
       .onDelete("CASCADE");
   });
 
-  await knex.schema.createTable("DisciplineTask", function (table) {
-    table.uuid('disciplineTaskId').primary().defaultTo(knex.raw('uuid_generate_v4()'));
+  await knex.schema.createTable("Objective", function (table) {
+    table.uuid('objectiveId').primary().defaultTo(knex.raw('uuid_generate_v4()'));
     table.uuid("disciplineId").notNullable();
-    table.string("disciplineTaskName").notNullable();
+    table.string("objectiveName").notNullable();
 
     table
       .foreign("disciplineId")
@@ -144,7 +146,15 @@ exports.up = async function (knex) {
     table.integer("rpdLaboratoryHours").notNullable();
     table.integer("rpdSelfstudyHours").notNullable();
     table.integer("rpdAdditionalHours").notNullable();
+    table.integer("controlWeek").notNullable();
     table.date("rpdDate").notNullable();
+    table.integer("course").notNullable();
+    table.integer("semester").notNullable();
+    table.integer("creditUnits").notNullable();
+    table.boolean("сontrolWork").notNullable();
+    table.boolean("courseProject").notNullable();
+    table.boolean("credit").notNullable();
+    table.boolean("exam").notNullable();
 
     table
       .foreign("disciplineId")

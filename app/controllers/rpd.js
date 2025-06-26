@@ -1,4 +1,5 @@
 const { dataBase } = require(__dir.libs + "/dataBase");
+const { v4: uuidv4 } = require('uuid');
 
 const addRpd = async (
   disciplineId,
@@ -8,20 +9,44 @@ const addRpd = async (
   rpdLaboratoryHours,
   rpdSelfstudyHours,
   rpdAdditionalHours,
-  year
+  rpdDate,
+  controlWeek,
+  course,
+  semester,
+  creditUnits,
+  сontrolWork,
+  courseProject,
+  credit,
+  exam,
 ) => {
-  const data = {
-    disciplineId,
-    rpdTotalHours,
-    rpdLectionHours,
-    rpdPracticalHours,
-    rpdLaboratoryHours,
-    rpdSelfstudyHours,
-    rpdAdditionalHours,
-    year,
-  };
+  try {
+    const rpdId = uuidv4(); // Генерируем новый UUID
 
-  return await dataBase("Rpd").insert(data);
+    await dataBase("Rpd").insert({
+      rpdId,
+      disciplineId,
+      rpdTotalHours,
+      rpdLectionHours,
+      rpdPracticalHours,
+      rpdLaboratoryHours,
+      rpdSelfstudyHours,
+      rpdAdditionalHours,
+      rpdDate,
+      controlWeek,
+      course,
+      semester,
+      creditUnits,
+      сontrolWork,
+      courseProject,
+      credit,
+      exam,
+    });
+
+    return rpdId;
+  } catch (error) {
+    console.error('Error adding rpd:', error);
+    throw error;
+  }
 };
 
 const getRpd = (data) => {
@@ -77,6 +102,10 @@ const addRpdLaboratoryClass = async (
   return await dataBase("Rpd_LaboratoryClass").insert(data);
 };
 
+const getAllRpdLaboratoryClass = (data) => {
+  return dataBase("Rpd_LaboratoryClass").select("*").where(data);
+};
+
 const getRpdLaboratoryClass = (data) => {
   return dataBase("Rpd_LaboratoryClass").select("*").where(data).first();
 };
@@ -108,6 +137,10 @@ const addRpdPracticalClass = async (
   return await dataBase("Rpd_PracticalClass").insert(data);
 };
 
+const getAllRpdPracticalClass = (data) => {
+  return dataBase("Rpd_PracticalClass").select("*").where(data);
+};
+
 const getRpdPracticalClass = (data) => {
   return dataBase("Rpd_PracticalClass").select("*").where(data).first();
 };
@@ -133,6 +166,10 @@ const addRpdLection = async (rpdId, lectionId, lectionHours) => {
   };
 
   return await dataBase("Rpd_Lection").insert(data);
+};
+
+const getAllRpdLection = (data) => {
+  return dataBase("Rpd_Lection").select("*").where(data);
 };
 
 const getRpdLection = (data) => {
@@ -174,7 +211,7 @@ const getRpdTopic = (data) => {
   return dataBase("Rpd_Topic").select("*").where(data).first();
 };
 
-const getAllRpdTopicByRpdId = (data) => {
+const getAllRpdTopic = (data) => {
   return dataBase("Rpd_Topic").select("*").where(data);
 };
 
@@ -198,20 +235,23 @@ module.exports = {
   deleteRpdCompetence,
   updateRpdCompetence,
   addRpdLaboratoryClass,
+  getAllRpdLaboratoryClass,
   getRpdLaboratoryClass,
   deleteRpdLaboratoryClass,
   updateRpdLaboratoryClass,
   addRpdPracticalClass,
+  getAllRpdPracticalClass,
   getRpdPracticalClass,
   deleteRpdPracticalClass,
   updateRpdPracticalClass,
   addRpdLection,
+  getAllRpdLection,
   getRpdLection,
   deleteRpdLection,
   updateRpdLection,
   addRpdTopic,
   getRpdTopic,
-  getAllRpdTopicByRpdId,
+  getAllRpdTopic,
   deleteRpdTopic,
   updateRpdTopic,
 };

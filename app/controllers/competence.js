@@ -62,7 +62,7 @@ const getAllCompetences = (data) => {
   return query;
 };
 
-const getCompetences = (data) => {
+const getCompetence = (data) => {
   return dataBase("Competence").select("*").where(data);
 };
 
@@ -79,7 +79,7 @@ module.exports = {
   addCompetence,
   getUniqueCompetence,
   getAllCompetences,
-  getCompetences,
+  getCompetence,
   deleteCompetence,
   updateCompetence,
 };

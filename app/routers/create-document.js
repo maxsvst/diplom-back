@@ -1,5 +1,18 @@
 const Router = require("express");
+const jwt = require('jsonwebtoken');
 const { checkSchema, validationResult } = require("express-validator");
+
+const {
+  importCompetences,
+  importedDiscipline,
+  importExamQuestions,
+  importLaboratoryClasses,
+  importLections,
+  importObjectives,
+  importPracticalClasses,
+  importPurposes,
+  importTopics
+} = require("../helpers/import-data");
 
 const router = new Router();
 
@@ -10,6 +23,7 @@ const Docxtemplater = require("docxtemplater");
 const expressionParser = require("docxtemplater/expressions.js");
 const fs = require("fs");
 const path = require("path");
+
 
 expressionParser.filters.loop = function (input, ...keys) {
   const result = input.reduce(function (result, item) {
@@ -79,98 +93,91 @@ const createDocument = (data) => {
 };
 
 router.get(
-  "/createDocument",
+  "/create-document",
   checkSchema({
-    id: {
-      isNumeric: { min: 0 },
+    rpdId: {
+      isUUID: true,
+      errorMessage: 'rpdId must be a valid UUID v4',
     },
   }),
   async (req, res) => {
     const errors = validationResult(req);
-    console.log(errors);
+
+    const user = {}
+
     if (!errors.isEmpty())
       return res.status(400).json({ errors: errors.array() });
-    const { id } = req.query;
-    const rpd = await axios.get(`${process.env.BACK_URL}/rpd/getRpd`, {
+
+    const authorizationHeader = req.headers.authorization;
+
+    if (!authorizationHeader) {
+      return res.status(401).json({ message: "Authorization header is missing" });
+    }
+
+    const token = authorizationHeader.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({ message: "Invalid authorization header format" });
+    }
+
+    try {
+      const { fullName, rank } = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+      user.fullName = fullName
+      user.rank = rank
+    } catch (error) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+
+    const { rpdId } = req.query;
+    const { data: rpd } = await axios.get(`${process.env.BACK_URL}/rpd/get-rpd`, {
       params: {
-        id,
+        rpdId,
       },
     });
 
-    const discipline = await axios.get(
-      // МАССИВ дисциплин
-      `${process.env.BACK_URL}/discipline/getDisciplineById`,
+    const { data: discipline } = await axios.get(
+      `${process.env.BACK_URL}/discipline/get-discipline`,
       {
         params: {
-          id: rpd.data.disciplineId,
+          disciplineId: rpd.disciplineId,
         },
       }
     );
 
-    const topics = await axios.get(`${process.env.BACK_URL}/topic/getAllTopics`, {
-      // МАССИВ ТЕМ
+    const { data: topics } = await axios.get(`${process.env.BACK_URL}/topic/get-all-topics`, {
+      // Темы в дисциплине
       params: {
-        disciplineId: rpd.data.disciplineId,
+        disciplineId: rpd.disciplineId,
       },
     });
 
-    const topicHours = await axios.get(
-      `${process.env.BACK_URL}/rpd/getAllRpdTopicByRpdId`,
+    const { data: rpdTopics } = await axios.get(
+      `${process.env.BACK_URL}/rpd/get-all-rpd-topic`,
       {
-        // МАССИВ ЧАСОВ К ТЕМАМ
+        // Часы по темам в РПД
         params: {
-          rpdId: rpd.data.id,
+          rpdId: rpd.rpdId,
         },
       }
     );
 
-    const laboratoryClasses = await axios.get(
-      // МАССИВ ЛЗ
-      `${process.env.BACK_URL}/laboratoryClass/getAllLaboratoryClasses`,
+    const { data: competencesIds } = await axios.get(
+      `${process.env.BACK_URL}/rpd/get-all-rpd-competence`,
       {
         params: {
-          disciplineId: discipline.data.id,
+          rpdId: rpd.rpdId,
         },
       }
     );
 
-    const practicalClasses = await axios.get(
-      // МАССИВ ПЗ
-      `${process.env.BACK_URL}/practicalClass/getAllPracticalClasses`,
-      {
-        params: {
-          disciplineId: discipline.data.id,
-        },
-      }
-    );
-
-    const lection = await axios.get(
-      // МАССИВ ЛЕКЦИЙ
-      `${process.env.BACK_URL}/lection/getAllLection`,
-      {
-        params: {
-          disciplineId: discipline.data.id,
-        },
-      }
-    );
-
-    const competenceIds = await axios.get(
-      `${process.env.BACK_URL}/rpd/getAllRpdCompetence`,
-      {
-        params: {
-          rpdId: rpd.data.id,
-        },
-      }
-    );
-
-    const competences = await Promise.all(
+    const competencesArray = await Promise.all(
       // МАССИВ КОМПЕТЕНЦИЙ
-      competenceIds.data.map(async (item) => {
+      competencesIds.map(async ({ competenceId }) => {
         const response = await axios.get(
-          `${process.env.BACK_URL}/competence/getCompetences`,
+          `${process.env.BACK_URL}/competence/get-competence`,
           {
             params: {
-              id: item.competenceId,
+              competenceId,
             },
           }
         );
@@ -178,132 +185,183 @@ router.get(
       })
     );
 
-    const examQuestion = await axios.get(
-      `${process.env.BACK_URL}/examQuestion/getAllExamQuestion`,
+    const competences = competencesArray.flatMap(arr => arr);
+
+    const { data: examQuestions } = await axios.get(
+      `${process.env.BACK_URL}/exam-question/get-all-exam-questions`,
       {
         params: {
-          disciplineId: discipline.data.id,
+          disciplineId: rpd.disciplineId,
         },
       }
     );
 
-    const tableTopics = topics.data
-      .map((item) => ({ id: item.id, name: item.topicName }))
-      .flat(Infinity);
-
-    const firstTableHours = topicHours.data
-      .map((item) => ({
-        topicId: item.topicId,
-        totalHours: item.topicTotalHours,
-        lectionHours: item.topicLectionHours,
-        practicalHours: item.topicPracticalHours,
-        laboratoryHours: item.topicLaboratoryHours,
-        selfstudyHours: item.topicSelfstudyHours,
-      }))
-      .flat(Infinity);
-
-    const docData = [
+    const { data: purposes } = await axios.get(
+      `${process.env.BACK_URL}/purpose/get-all-purposes`,
       {
-        title: "РПД",
-        year: rpd.data.year,
-        code: discipline.data.code,
-        disciplineUppercaseName: discipline.data.fullName,
-        cathedra: discipline.data.cathedra,
-        studyField: discipline.data.studyField,
-        disciplineLowercaseName:
-          discipline.data.fullName[0].toUpperCase() +
-          discipline.data.fullName.slice(1).toLowerCase(),
-        competences: competences.map((item) => item).flat(Infinity),
-        firstTable: tableTopics
-          .flatMap((topic) =>
-            firstTableHours.flatMap((item, index) => {
-              if (topic.id === item.topicId) {
-                return {
-                  index: index + 1,
-                  name: topic.name,
-                  totalHours: item.totalHours,
-                  lectionHours: item.lectionHours,
-                  practicalHours: item.practicalHours,
-                  laboratoryHours: item.laboratoryHours,
-                  selfstudyHours: item.selfstudyHours,
-                };
-              } else return null;
-            })
-          )
-          .filter((item) => item !== null),
-        secondTable: tableTopics.map((topic, index) => {
-          const labs = laboratoryClasses.data
-            .filter((item) => item.topicId === topic.id)
-            .reduce(
-              (acc, obj, index, arrayRef) =>
-                arrayRef.length === index + 1
-                  ? acc + obj.laboratoryClassName
-                  : acc + obj.laboratoryClassName + ", ",
-              ""
-            );
-          const practice = practicalClasses.data
-            .filter((item) => item.topicId === topic.id)
-            .reduce(
-              (acc, obj, index, arrayRef) =>
-                arrayRef.length === index + 1
-                  ? acc + obj.practicalClassName
-                  : acc + obj.practicalClassName + ", ",
-              ""
-            );
-          const lects = lection.data
-            .filter((item) => item.topicId === topic.id)
-            .reduce(
-              (acc, obj, index, arrayRef) =>
-                arrayRef.length === index + 1
-                  ? acc + obj.lectionName
-                  : acc + obj.lectionName + ", ",
-              ""
-            );
+        params: {
+          disciplineId: rpd.disciplineId,
+        },
+      }
+    );
 
-          return {
-            id: index + 1,
-            name: topic.name,
-            laboratoryClasses: labs,
-            practicalClasses: practice,
-            lection: lects,
-          };
-        }),
-        thirdTable: tableTopics.map((topic, index) => {
-          const filteredQuestion = examQuestion.data.filter(
-            (question) => topic.id === question.topicId
-          );
-          return {
-            topicIndex: index + 1,
-            name: topic.name,
-            question: filteredQuestion.map((item, index) => {
-              return {
-                questionIndex: index + 1,
-                questionName: item.question,
-              };
-            }),
-          };
-        }),
-        allQuestion: examQuestion.data.map((item, index) => {
-          return { id: index + 1, questionName: item.question };
-        }),
-        topics: topics.data
-          .map((item) => ({ id: item.id, name: item.topicName }))
-          .flat(Infinity),
-        laboratoryClasses: laboratoryClasses.data
-          .map((item) => item)
-          .flat(Infinity),
-        practicalClasses: practicalClasses.data
-          .map((item) => item)
-          .flat(Infinity),
-        lection: lection.data.map((item) => item).flat(Infinity),
-        rpdTotalHours: rpd.data.rpdTotalHours,
-        rpdLectionHours: rpd.data.rpdLectionHours,
-        rpdPracticalHours: rpd.data.rpdPracticalHours,
-        rpdLaboratoryHours: rpd.data.rpdLaboratoryHours,
-        rpdSelfstudyHours: rpd.data.rpdSelfstudyHours,
-        rpdAdditionalHours: rpd.data.rpdAdditionalHours,
-      },
+    const { data: objectives } = await axios.get(
+      `${process.env.BACK_URL}/objective/get-all-objectives`,
+      {
+        params: {
+          disciplineId: rpd.disciplineId,
+        },
+      }
+    );
+
+    const topicName = (id) => topics.find(({ topicId }) => topicId === id).topicName
+
+    const day = new Date(rpd.rpdDate).getUTCDate();
+    const monthNumber = new Date(rpd.rpdDate).getMonth();
+    const months = [
+      "января", "февраля", "марта", "апреля", "мая", "июня",
+      "июля", "августа", "сентября", "октября", "ноября", "декабря"
     ];
+
+    const month = months[monthNumber];
+    const year = new Date(rpd.rpdDate).getUTCFullYear();
+
+    const teacherName = user.fullName.split(' ').map((initial, idx) => {
+      if (idx > 0) {
+        return initial.substr(0, 1) + '.'
+      }
+      return initial
+    }).join(' ')
+
+    const fomattedPurposes = purposes.map(({ purposeName }) => purposeName).join(', ')
+    const fomattedObjectives = objectives.map(({ objectiveName }) => ({ objectiveName }))
+
+    const firstTableHours = rpdTopics
+      .map((topic, idx) => ({
+        index: idx + 1,
+        name: topicName(topic.topicId),
+        topicId: topic.topicId,
+        totalHours: topic.topicTotalHours,
+        lectionHours: topic.topicLectionHours,
+        practicalHours: topic.topicPracticalHours,
+        laboratoryHours: topic.topicLaboratoryHours,
+        selfstudyHours: topic.topicSelfstudyHours,
+      }))
+
+    const secondTableHours = await Promise.all(rpdTopics
+      .map(async (topic, idx) => {
+
+        const { data: lections } = await axios.get(
+          `${process.env.BACK_URL}/lection/get-all-lections`,
+          {
+            params: {
+              topicId: topic.topicId,
+            },
+          }
+        );
+
+        const { data: laboratoryClasses } = await axios.get(
+          `${process.env.BACK_URL}/laboratory-class/get-all-laboratory-classes`,
+          {
+            params: {
+              topicId: topic.topicId,
+            },
+          }
+        );
+
+        const { data: practicalClasses } = await axios.get(
+          `${process.env.BACK_URL}/practical-class/get-all-practical-classes`,
+          {
+            params: {
+              topicId: topic.topicId,
+            },
+          }
+        );
+
+        const formattedLections = lections.map(({ lectionName }) => lectionName).join('. ')
+        const formattedLaboratoryClasses = laboratoryClasses.map(({ laboratoryClassName }) => laboratoryClassName).join('. ')
+        const formattedPracticalClasses = practicalClasses.map(({ practicalClassName }) => practicalClassName).join('. ')
+
+        return {
+          id: idx + 1,
+          name: topicName(topic.topicId),
+          lections: formattedLections,
+          laboratoryClasses: formattedLaboratoryClasses,
+          practicalClasses: formattedPracticalClasses,
+        }
+      })
+    )
+
+    const thirdTableHours = rpdTopics.map((topic, index) => {
+      const filteredQuestion = examQuestions.filter(
+        (question) => topic.topicId === question.topicId
+      );
+
+      return {
+        topicIndex: index + 1,
+        name: topicName(topic.topicId),
+        question: filteredQuestion.map((item, index) => {
+          return {
+            questionIndex: index + 1,
+            questionName: item.examQuestionName,
+          };
+        }),
+      };
+    })
+
+    const competenceCodes = competences.map(competenceArray => competenceArray.competenceCode).join(', ')
+
+    const docData =
+      [
+        {
+          title: "РПД",
+
+          day: day,
+          month: month,
+          year: year, // год рпд и год набора
+
+          code: discipline.code,
+          disciplineUppercaseName: discipline.fullName,
+
+          studyField: discipline.studyField,
+          profileName: discipline.profileName,
+          studyFieldCode: discipline.studyFieldCode,
+          disciplineLowercaseName:
+            discipline.fullName[0].toUpperCase() +
+            discipline.fullName.slice(1).toLowerCase(),
+
+          teacherName: teacherName,
+          rank: user.rank,
+
+          purposes: fomattedPurposes,
+          objectives: fomattedObjectives,
+
+          competences: competences,
+
+          course: rpd.course,
+          semester: rpd.semester,
+          controlWeek: `${rpd.controlWeek}-${rpd.controlWeek + 1}`,
+          creditUnits: rpd.creditUnits,
+          rpdTotalHours: rpd.rpdTotalHours,
+          rpdLectionHours: rpd.rpdLectionHours,
+          rpdPracticalHours: rpd.rpdPracticalHours,
+          rpdLaboratoryHours: rpd.rpdLaboratoryHours,
+          rpdSelfstudyHours: rpd.rpdSelfstudyHours,
+          rpdAdditionalHours: rpd.rpdAdditionalHours,
+          controlWork: rpd.controlWork ? rpd.semester : '-',
+          courseProject: rpd.courseProject ? rpd.semester : '-',
+          credit: rpd.credit ? rpd.semester : '-',
+          exam: rpd.exam ? rpd.semester : '-',
+
+          firstTable: firstTableHours,
+          secondTable: secondTableHours,
+          thirdTable: thirdTableHours,
+          competenceCodes: competenceCodes,
+          allQuestions: examQuestions.map(({ examQuestionName }, index) => {
+            return { id: index + 1, questionName: examQuestionName };
+          })
+        }
+      ];
 
     createDocument(docData);
     res.sendFile(`${docData.map((item) => item.title)}.docx`, {
@@ -311,5 +369,165 @@ router.get(
     });
   }
 );
+
+const addingTopics = async (topics) => {
+  for (const { disciplineId, topicName } of topics) {
+    await axios.post(
+      `${process.env.BACK_URL}/topic/add-topic`, {
+      disciplineId, topicName
+    })
+    // await api.addTopic(disciplineId, topicName);
+  }
+}
+
+const addingCompetences = async (competences) => {
+  for (const competence of competences) {
+    const {
+      disciplineId,
+      competenceType,
+      competenceCode,
+      competenceName,
+      indicatorCode,
+      indicatorName,
+    } = competence
+
+    await axios.post(
+      `${process.env.BACK_URL}/competence/add-competence`, {
+      disciplineId,
+      competenceType,
+      competenceCode,
+      competenceName,
+      indicatorCode,
+      indicatorName,
+    })
+    // await api.addCompetence(
+    //   disciplineId,
+    //   competenceType,
+    //   competenceCode,
+    //   competenceName,
+    //   indicatorCode,
+    //   indicatorName,
+    // );
+  }
+}
+
+const addingPurposes = async (purposes) => {
+  for (const { disciplineId, purposeName } of purposes) {
+    await axios.post(
+      `${process.env.BACK_URL}/purpose/add-purpose`, {
+      disciplineId, purposeName
+    })
+    // await api.addPurpose(disciplineId, purposeName);
+  }
+}
+
+const addingObjectives = async (objectives) => {
+  for (const { disciplineId, objectiveName } of objectives) {
+    await axios.post(
+      `${process.env.BACK_URL}/objective/add-objective`, {
+      disciplineId, objectiveName
+    })
+    // await api.addObjective(disciplineId, objectiveName);
+  }
+}
+
+router.get(
+  "/import-data",
+  async (_, res) => {
+    try {
+      const { code, fullName, profileName, studyField, studyFieldCode } = importedDiscipline
+
+      const { data: disciplineData } = await axios.post(
+        `${process.env.BACK_URL}/discipline/add-discipline`, {
+        fullName,
+        profileName,
+        studyField,
+        studyFieldCode,
+        code,
+      });
+      const { disciplineId } = disciplineData
+
+      if (disciplineId) {
+        const topicsToAdd = importTopics(disciplineId);
+        const competencesToAdd = importCompetences(disciplineId);
+        const purposesToAdd = importPurposes(disciplineId);
+        const objectivesToAdd = importObjectives(disciplineId);
+
+        await addingTopics(topicsToAdd);
+        await addingCompetences(competencesToAdd)
+        await addingPurposes(purposesToAdd)
+        await addingObjectives(objectivesToAdd)
+
+        // const importedTopics = await api.getAllTopics({ disciplineId });
+        const { data: topics } = await axios.get(`${process.env.BACK_URL}/topic/get-all-topics`, {
+          // Темы в дисциплине
+          params: {
+            disciplineId,
+          },
+        });
+
+        const importedTopicsIds = topics.map(({ topicId }) => topicId);
+
+        for (const { topicId, lectionName } of importLections(importedTopicsIds)) {
+          try {
+            // await api.addLection(topicId, lectionName!);
+            await axios.post(
+              `${process.env.BACK_URL}/lection/add-lection`, {
+              topicId, lectionName
+            }
+            );
+          } catch (error) {
+            console.error(`Ошибка при добавлении лекции "${lectionName}" к теме ${topicId}:`, error);
+          }
+        }
+
+        for (const { topicId, laboratoryClassName } of importLaboratoryClasses(importedTopicsIds)) {
+          try {
+            await axios.post(
+              `${process.env.BACK_URL}/laboratory-class/add-laboratory-class`, {
+              topicId, laboratoryClassName
+            }
+            );
+            // await api.addLaboratoryClass(topicId, laboratoryClassName!);
+          } catch (error) {
+            console.error(`Ошибка при добавлении лабораторного занятия "${laboratoryClassName}" к теме ${topicId}:`, error);
+          }
+        }
+
+        for (const { topicId, practicalClassName } of importPracticalClasses(importedTopicsIds)) {
+          try {
+            await axios.post(
+              `${process.env.BACK_URL}/practical-class/add-practical-class`, {
+              topicId, practicalClassName
+            }
+            );
+            // await api.addPracticalClass(topicId, practicalClassName!);
+          } catch (error) {
+            console.error(`Ошибка при добавлении практического занятия "${practicalClassName}" к теме ${topicId}:`, error);
+          }
+        }
+
+        for (const { topicId, examQuestionName } of importExamQuestions(disciplineId, importedTopicsIds)) {
+          try {
+            await axios.post(
+              `${process.env.BACK_URL}/exam-question/add-exam-question`, {
+              disciplineId, topicId, examQuestionName
+            }
+            );
+            // await api.addExamQuestion(disciplineId, topicId, examQuestionName!);
+          } catch (error) {
+            console.error(`Ошибка при добавлении вопроса к экзамену "${examQuestionName}" к теме ${topicId}:`, error);
+          }
+        }
+      } else {
+        console.warn("disciplineId отсутствует. Невозможно импортировать темы.");
+      }
+      res.status(200).json({ isImported: true });
+    } catch (error) {
+      console.error("Error in /import-data route:", error);
+      res.status(500).json({ error: "Failed to import data" });
+    }
+  }
+)
 
 module.exports = router;
